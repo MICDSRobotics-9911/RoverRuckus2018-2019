@@ -10,7 +10,9 @@ android:
   - tools
   - platform-tools
   - build-tools-27.0.3
-  - tools
+  - lint-gradle-26.1.4
+  - tool
+  - extra
   - android-19 #Minimum API Version
   - android-23 #Target API Version
 # - android-26 #Newest API Version

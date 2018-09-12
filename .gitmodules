@@ -1,4 +1,0 @@
-[submodule "robotplus"]
-	path = robotplus
-	url = https://github.com/MICDSRobotics-5190/robotplus.git
-	branch = master

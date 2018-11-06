@@ -2,6 +2,7 @@ package org.firstinspires.ftc.teamcode.teleops;
 
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
+import com.qualcomm.robotcore.hardware.DcMotor;
 
 import org.firstinspires.ftc.teamcode.robotplus.gamepadwrapper.Controller;
 import org.firstinspires.ftc.teamcode.robotplus.hardware.MecanumDrive;
@@ -15,6 +16,8 @@ public class Basic extends OpMode {
     private Robot robot;
     private MecanumDrive mecanumDrive;
 
+    private DcMotor grabber;
+
     private Controller p1;
 
     public void init() {
@@ -23,9 +26,24 @@ public class Basic extends OpMode {
 
         robot = new Robot(hardwareMap);
         mecanumDrive = (MecanumDrive) robot.getDrivetrain();
+        grabber = hardwareMap.get(DcMotor.class, "grabber");
     }
 
     public void loop() {
         mecanumDrive.complexDrive(p1.getOriginalPad(), telemetry);
+
+        if (p1.a.isDown()) {
+            grabber.setPower(1);
+        }
+        else if (!p1.a.isDown()) {
+            grabber.setPower(0);
+        }
+
+        if (p1.b.isDown()) {
+            grabber.setPower(-1);
+        }
+        else if (!p1.b.isDown()) {
+            grabber.setPower(0);
+        }
     }
 }

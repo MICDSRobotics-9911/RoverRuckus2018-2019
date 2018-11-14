@@ -24,25 +24,29 @@ public class Basic extends OpMode {
         telemetry.addData("Status", "Initializing");
         p1 = new Controller(gamepad1);
 
+        // hardware map
         robot = new Robot(hardwareMap);
         mecanumDrive = (MecanumDrive) robot.getDrivetrain();
         grabber = hardwareMap.get(DcMotor.class, "grabber");
+
+        // settings
+        //grabber.setMode(DcMotor.RunMod);
     }
 
     public void loop() {
         mecanumDrive.complexDrive(p1.getOriginalPad(), telemetry);
+        telemetry.addData("Grabber Positiion", grabber.getCurrentPosition());
 
-        if (p1.a.isDown()) {
+        if (gamepad1.a) {
             grabber.setPower(1);
         }
-        else if (!p1.a.isDown()) {
+        else if (!gamepad1.a) {
             grabber.setPower(0);
         }
-
-        if (p1.b.isDown()) {
+        if (gamepad1.b) {
             grabber.setPower(-1);
         }
-        else if (!p1.b.isDown()) {
+        else if (!gamepad1.b) {
             grabber.setPower(0);
         }
     }

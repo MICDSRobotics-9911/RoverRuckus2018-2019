@@ -7,6 +7,7 @@ import com.qualcomm.robotcore.hardware.DcMotor;
 import org.firstinspires.ftc.teamcode.robotplus.gamepadwrapper.Controller;
 import org.firstinspires.ftc.teamcode.robotplus.hardware.MecanumDrive;
 import org.firstinspires.ftc.teamcode.robotplus.hardware.Robot;
+import org.firstinspires.ftc.teamcode.teleops.lib.ElevatorStatus;
 
 import java.util.ResourceBundle;
 
@@ -17,8 +18,11 @@ public class Basic extends OpMode {
     private MecanumDrive mecanumDrive;
 
     private DcMotor grabber;
+    private DcMotor elevator;
 
     private Controller p1;
+
+    private ElevatorStatus elevatorStatus = new ElevatorStatus();
 
     public void init() {
         telemetry.addData("Status", "Initializing");
@@ -26,11 +30,12 @@ public class Basic extends OpMode {
 
         // hardware map
         robot = new Robot(hardwareMap);
+        elevator = hardwareMap.get(DcMotor.class, "elevator");
         mecanumDrive = (MecanumDrive) robot.getDrivetrain();
         grabber = hardwareMap.get(DcMotor.class, "grabber");
 
         // settings
-        //grabber.setMode(DcMotor.RunMod);
+        this.elevator.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
     }
 
     public void loop() {
@@ -48,6 +53,20 @@ public class Basic extends OpMode {
         }
         else if (!gamepad1.b) {
             grabber.setPower(0);
+        }
+
+        // elevator
+        if (gamepad1.dpad_up) {
+            elevator.setPower(1);
+        }
+        else if (!gamepad1.dpad_up) {
+            elevator.setPower(0);
+        }
+        if (gamepad1.dpad_down) {
+            elevator.setPower(-1);
+        }
+        else if (!gamepad1.dpad_down) {
+            elevator.setPower(0);
         }
     }
 }

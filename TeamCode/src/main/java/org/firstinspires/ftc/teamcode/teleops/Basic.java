@@ -3,13 +3,11 @@ package org.firstinspires.ftc.teamcode.teleops;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
+import com.qualcomm.robotcore.hardware.Servo;
 
 import org.firstinspires.ftc.teamcode.robotplus.gamepadwrapper.Controller;
 import org.firstinspires.ftc.teamcode.robotplus.hardware.MecanumDrive;
 import org.firstinspires.ftc.teamcode.robotplus.hardware.Robot;
-import org.firstinspires.ftc.teamcode.teleops.lib.ElevatorStatus;
-
-import java.util.ResourceBundle;
 
 @TeleOp(name = "Basic DriveTrain", group = "")
 public class Basic extends OpMode {
@@ -20,9 +18,10 @@ public class Basic extends OpMode {
     private DcMotor grabber;
     private DcMotor elevator;
 
-    private Controller p1;
+    private boolean dumperDown;
+    private Servo dumper;
 
-    private ElevatorStatus elevatorStatus = new ElevatorStatus();
+    private Controller p1;
 
     public void init() {
         telemetry.addData("Status", "Initializing");
@@ -33,9 +32,12 @@ public class Basic extends OpMode {
         elevator = hardwareMap.get(DcMotor.class, "elevator");
         mecanumDrive = (MecanumDrive) robot.getDrivetrain();
         grabber = hardwareMap.get(DcMotor.class, "grabber");
+        dumper = hardwareMap.get(Servo.class, "dumper");
+        dumperDown = false;
 
         // settings
         this.elevator.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        this.dumper.setDirection(Servo.Direction.FORWARD);
     }
 
     public void loop() {
@@ -55,6 +57,16 @@ public class Basic extends OpMode {
             grabber.setPower(0);
         }
 
+        // dumper
+        if (p1.x.isDown()) {
+            dumper.setPosition(.5);
+            dumperDown = !dumperDown;
+        }
+        else {
+            dumper.setPosition(1);
+        }
+
+
         // elevator
         if (gamepad1.dpad_up) {
             elevator.setPower(1);
@@ -68,5 +80,13 @@ public class Basic extends OpMode {
         else if (!gamepad1.dpad_down) {
             elevator.setPower(0);
         }
+
+        /*if (p1.x.isDown()) {
+            dumper.setPosition(1);
+            dumperDown = !dumperDown;
+        }*/
+
+        p1.update();
+        telemetry.addData("Dumper", dumper.getPosition());
     }
 }

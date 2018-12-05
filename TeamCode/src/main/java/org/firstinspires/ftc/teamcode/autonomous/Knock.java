@@ -27,17 +27,29 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-package org.firstinspires.ftc.robotcontroller.external.samples;
+package org.firstinspires.ftc.teamcode.autonomous;
 
+import android.util.Log;
+
+import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
-import java.util.List;
+import com.qualcomm.robotcore.hardware.DcMotor;
+import com.qualcomm.robotcore.hardware.VoltageSensor;
+
 import org.firstinspires.ftc.robotcore.external.ClassFactory;
+import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.VuforiaLocalizer;
 import org.firstinspires.ftc.robotcore.external.navigation.VuforiaLocalizer.CameraDirection;
-import org.firstinspires.ftc.robotcore.external.tfod.TFObjectDetector;
 import org.firstinspires.ftc.robotcore.external.tfod.Recognition;
+import org.firstinspires.ftc.robotcore.external.tfod.TFObjectDetector;
+import org.firstinspires.ftc.teamcode.robotplus.autonomous.TimeOffsetVoltage;
+import org.firstinspires.ftc.teamcode.robotplus.hardware.IMUWrapper;
+import org.firstinspires.ftc.teamcode.robotplus.hardware.MecanumDrive;
+import org.firstinspires.ftc.teamcode.robotplus.hardware.Robot;
+
+import java.util.List;
 
 /**
  * This 2018-2019 OpMode illustrates the basics of using the TensorFlow Object Detection API to
@@ -49,12 +61,20 @@ import org.firstinspires.ftc.robotcore.external.tfod.Recognition;
  * IMPORTANT: In order to use this OpMode, you need to obtain your own Vuforia license key as
  * is explained below.
  */
-@TeleOp(name = "Concept: TensorFlow Object Detection", group = "Concept")
-
-public class ConceptTensorFlowObjectDetection extends LinearOpMode {
+@Autonomous(name = "Knock", group = "Concept")
+public class Knock extends LinearOpMode {
     private static final String TFOD_MODEL_ASSET = "RoverRuckus.tflite";
     private static final String LABEL_GOLD_MINERAL = "Gold Mineral";
     private static final String LABEL_SILVER_MINERAL = "Silver Mineral";
+
+    private Robot robot;
+    private MecanumDrive mecanumDrive;
+
+    private DcMotor grabber;
+    private DcMotor elevator;
+    private IMUWrapper imuWrapper;
+    private GoldPosition goldPosition = GoldPosition.UNKNOWN;
+    private int step = 1;
 
     /*
      * IMPORTANT: You need to obtain your own license key to use Vuforia. The string below with which
@@ -97,16 +117,27 @@ public class ConceptTensorFlowObjectDetection extends LinearOpMode {
         /** Wait for the game to begin */
         telemetry.addData(">", "Press Play to start tracking");
         telemetry.update();
+
+        robot = new Robot(hardwareMap);
+        elevator = hardwareMap.get(DcMotor.class, "elevator");
+        mecanumDrive = (MecanumDrive) robot.getDrivetrain();
+        grabber = hardwareMap.get(DcMotor.class, "grabber");
+        imuWrapper = new IMUWrapper(hardwareMap);
+
+        this.elevator.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         waitForStart();
 
         if (opModeIsActive()) {
+            //Lowering.lowerRobot(this, this.elevator);
+
             /** Activate Tensor Flow Object Detection. */
             if (tfod != null) {
                 tfod.activate();
             }
 
             while (opModeIsActive()) {
-                if (tfod != null) {
+                telemetry.addData("Angle", imuWrapper.getOrientation().toAngleUnit(AngleUnit.RADIANS).firstAngle);
+                if (tfod != null && step == 1) {
                     // getUpdatedRecognitions() will return null if no new information is available since
                     // the last time that call was made.
                     List<Recognition> updatedRecognitions = tfod.getUpdatedRecognitions();
@@ -128,16 +159,57 @@ public class ConceptTensorFlowObjectDetection extends LinearOpMode {
                         if (goldMineralX != -1 && silverMineral1X != -1 && silverMineral2X != -1) {
                           if (goldMineralX < silverMineral1X && goldMineralX < silverMineral2X) {
                             telemetry.addData("Gold Mineral Position", "Left");
+                              Log.i("[Knock]", "Left");
+                            goldPosition = GoldPosition.LEFT;
+                              step++;
                           } else if (goldMineralX > silverMineral1X && goldMineralX > silverMineral2X) {
                             telemetry.addData("Gold Mineral Position", "Right");
+                              Log.i("[Knock]", "Right");
+                            goldPosition = GoldPosition.RIGHT;
+                            step++;
                           } else {
                             telemetry.addData("Gold Mineral Position", "Center");
+                              Log.i("[Knock]", "Center");
+                            goldPosition = GoldPosition.CENTER;
+                              step++;
                           }
                         }
                       }
                       telemetry.update();
                     }
                 }
+
+                if (!goldPosition.equals(goldPosition.UNKNOWN) && step == 2) {
+                    switch (goldPosition) {
+                        case LEFT:
+                            this.mecanumDrive.setAngle(imuWrapper, Math.PI/4);
+                            sleep(1000);
+                            step++;
+                            break;
+                        case CENTER:
+                            step++;
+                            break;
+                        case RIGHT:
+                            this.mecanumDrive.setAngle(imuWrapper, -Math.PI/4);
+                            this.mecanumDrive.stopMoving();
+                            step++;
+                            break;
+                        default:
+                            break;
+                    }
+                }
+                else {
+                    continue;
+                }
+
+                if (step == 3) {
+                    this.mecanumDrive.stopMoving();
+                    //this.mecanumDrive.complexDrive(MecanumDrive.Direction.LEFT.angle(), 1, 0);
+                    //sleep(TimeOffsetVoltage.calculateDistance((hardwareMap.voltageSensor.get("Expansion Hub 10").getVoltage()), 60));
+                    this.mecanumDrive.stopMoving();
+                }
+
+                telemetry.update();
             }
         }
 

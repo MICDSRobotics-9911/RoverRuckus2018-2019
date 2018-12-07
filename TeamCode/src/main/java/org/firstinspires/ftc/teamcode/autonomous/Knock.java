@@ -37,6 +37,7 @@ import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.VoltageSensor;
+import com.sun.tools.javac.comp.Lower;
 
 import org.firstinspires.ftc.robotcore.external.ClassFactory;
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
@@ -128,7 +129,20 @@ public class Knock extends LinearOpMode {
         waitForStart();
 
         if (opModeIsActive()) {
-            //Lowering.lowerRobot(this, this.elevator);
+            if (step == 0) {
+                Lowering.lowerRobot(this, this.elevator);
+                this.mecanumDrive.complexDrive(0, -1, 0);
+                this.sleep(500);
+                this.mecanumDrive.stopMoving();
+                this.mecanumDrive.complexDrive(MecanumDrive.Direction.LEFT.angle(), 1, 0);
+                sleep(250);
+                this.mecanumDrive.complexDrive(MecanumDrive.Direction.UP.angle(), 1, 0);
+                sleep(500);
+                this.mecanumDrive.stopMoving();
+                this.mecanumDrive.complexDrive(MecanumDrive.Direction.RIGHT.angle(), 1, 0);
+                sleep(500);
+                this.mecanumDrive.stopMoving();
+            }
 
             /** Activate Tensor Flow Object Detection. */
             if (tfod != null) {
@@ -182,15 +196,17 @@ public class Knock extends LinearOpMode {
                 if (!goldPosition.equals(goldPosition.UNKNOWN) && step == 2) {
                     switch (goldPosition) {
                         case LEFT:
-                            this.mecanumDrive.setAngle(imuWrapper, Math.PI/4);
-                            sleep(1000);
+                            this.mecanumDrive.complexDrive(0, 0, 0.3);
+                            sleep(TimeOffsetVoltage.calculateDistance((hardwareMap.voltageSensor.get("Expansion Hub 10").getVoltage()), 31));
+                            this.mecanumDrive.stopMoving();
                             step++;
                             break;
                         case CENTER:
                             step++;
                             break;
                         case RIGHT:
-                            this.mecanumDrive.setAngle(imuWrapper, -Math.PI/4);
+                            this.mecanumDrive.complexDrive(0, 0, -0.3);
+                            sleep(TimeOffsetVoltage.calculateDistance((hardwareMap.voltageSensor.get("Expansion Hub 10").getVoltage()), 31));
                             this.mecanumDrive.stopMoving();
                             step++;
                             break;
@@ -204,8 +220,39 @@ public class Knock extends LinearOpMode {
 
                 if (step == 3) {
                     this.mecanumDrive.stopMoving();
-                    //this.mecanumDrive.complexDrive(MecanumDrive.Direction.LEFT.angle(), 1, 0);
-                    //sleep(TimeOffsetVoltage.calculateDistance((hardwareMap.voltageSensor.get("Expansion Hub 10").getVoltage()), 60));
+                    this.mecanumDrive.complexDrive(MecanumDrive.Direction.LEFT.angle(), 1, 0);
+                    sleep(TimeOffsetVoltage.calculateDistance((hardwareMap.voltageSensor.get("Expansion Hub 10").getVoltage()), 60));
+                    this.mecanumDrive.stopMoving();
+                    step++;
+                }
+
+                // rotate towards the rail
+                if (step == 4) {
+                    switch (goldPosition) {
+                        case LEFT:
+                            this.mecanumDrive.complexDrive(0, 0, -0.3);
+                            sleep(TimeOffsetVoltage.calculateDistance((hardwareMap.voltageSensor.get("Expansion Hub 10").getVoltage()), 72));
+                            this.mecanumDrive.stopMoving();
+                            step++;
+                            break;
+                        case CENTER:
+                            this.mecanumDrive.complexDrive(MecanumDrive.Direction.LEFT.angle(), 1, 0);
+                            sleep(TimeOffsetVoltage.calculateDistance((hardwareMap.voltageSensor.get("Expansion Hub 10").getVoltage()), 75));
+                            this.mecanumDrive.stopMoving();
+                            step++;
+                            break;
+                        case RIGHT:
+                            this.mecanumDrive.complexDrive(0, 0, 0.3);
+                            sleep(TimeOffsetVoltage.calculateDistance((hardwareMap.voltageSensor.get("Expansion Hub 10").getVoltage()), 72));
+                            this.mecanumDrive.stopMoving();
+                            step++;
+                            break;
+                    }
+                }
+
+                if (step == 5) {
+                    this.mecanumDrive.complexDrive(MecanumDrive.Direction.UP.angle(), 1, 0);
+                    sleep(TimeOffsetVoltage.calculateDistance((hardwareMap.voltageSensor.get("Expansion Hub 10").getVoltage()), 60));
                     this.mecanumDrive.stopMoving();
                 }
 

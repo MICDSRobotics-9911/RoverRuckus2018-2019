@@ -6,6 +6,7 @@ import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.Servo;
 
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
+import org.firstinspires.ftc.teamcode.data.ElevatorStatus;
 import org.firstinspires.ftc.teamcode.robotplus.gamepadwrapper.Controller;
 import org.firstinspires.ftc.teamcode.robotplus.hardware.IMUWrapper;
 import org.firstinspires.ftc.teamcode.robotplus.hardware.MecanumDrive;
@@ -23,6 +24,7 @@ public class Basic extends OpMode {
     private boolean dumperDown;
     private Servo dumper;
     private IMUWrapper imuWrapper;
+    private ElevatorStatus elevatorStatus = ElevatorStatus.STOPPED;
 
     private Controller p1;
 
@@ -73,18 +75,22 @@ public class Basic extends OpMode {
 
 
         // elevator
-        if (gamepad1.dpad_up) {
+        if (p1.dpadUp.isDown() && (elevatorStatus.equals(ElevatorStatus.STOPPED))) {
             elevator.setPower(1);
+            elevatorStatus = ElevatorStatus.RAISING;
         }
-        else if (!gamepad1.dpad_up) {
-            elevator.setPower(0);
-        }
-        if (gamepad1.dpad_down) {
+        else if (p1.dpadDown.isDown() && (elevatorStatus.equals(ElevatorStatus.STOPPED))) {
             elevator.setPower(-1);
+            elevatorStatus = ElevatorStatus.LOWERING;
         }
-        else if (!gamepad1.dpad_down) {
+        else if ((p1.dpadDown.isDown() || p1.dpadUp.isDown())&& (!elevatorStatus.equals(ElevatorStatus.STOPPED))) {
             elevator.setPower(0);
+            elevatorStatus = ElevatorStatus.STOPPED;
         }
+        /*else if (p1.dpadUp.isDown() && (!elevatorStatus.equals(ElevatorStatus.RAISING))) {
+            elevator.setPower(0);
+            elevatorStatus = ElevatorStatus.STOPPED;
+        }*/
 
         /*if (p1.x.isDown()) {
             dumper.setPosition(1);

@@ -97,7 +97,8 @@ public class Basic extends OpMode {
             dumperDown = !dumperDown;
         }*/
 
-        p1.update();
+        telemetry.addData("Elevator", elevatorStatus.toString());
         telemetry.addData("Dumper", dumper.getPosition());
+        p1.update();
     }
 }

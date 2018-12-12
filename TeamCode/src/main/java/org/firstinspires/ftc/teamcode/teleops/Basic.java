@@ -11,6 +11,7 @@ import org.firstinspires.ftc.teamcode.robotplus.gamepadwrapper.Controller;
 import org.firstinspires.ftc.teamcode.robotplus.hardware.IMUWrapper;
 import org.firstinspires.ftc.teamcode.robotplus.hardware.MecanumDrive;
 import org.firstinspires.ftc.teamcode.robotplus.hardware.Robot;
+import org.firstinspires.ftc.teamcode.robotplus.robodata.AccessControl;
 
 @TeleOp(name = "Basic DriveTrain", group = "")
 public class Basic extends OpMode {
@@ -27,10 +28,13 @@ public class Basic extends OpMode {
     private ElevatorStatus elevatorStatus = ElevatorStatus.STOPPED;
 
     private Controller p1;
+    private Controller p2;
+    private AccessControl accessControl;
 
     public void init() {
         telemetry.addData("Status", "Initializing");
         p1 = new Controller(gamepad1);
+        p2 = new Controller(gamepad2);
 
         // hardware map
         robot = new Robot(hardwareMap);
@@ -40,6 +44,7 @@ public class Basic extends OpMode {
         dumper = hardwareMap.get(Servo.class, "dumper");
         dumperDown = false;
         imuWrapper = new IMUWrapper(hardwareMap);
+        accessControl = new AccessControl();
 
         // settings
         this.elevator.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
@@ -47,25 +52,36 @@ public class Basic extends OpMode {
     }
 
     public void loop() {
-        mecanumDrive.complexDrive(p1.getOriginalPad(), telemetry);
         telemetry.addData("Grabber Positiion", grabber.getCurrentPosition());
         telemetry.addData("Angle", imuWrapper.getOrientation().toAngleUnit(AngleUnit.RADIANS).firstAngle);
 
-        if (gamepad1.a) {
+        // change control of mecanum drive
+        if (p1.start.isDown() || p2.start.isDown()) {
+            this.accessControl.changeAccess();
+        }
+
+        if (accessControl.isG1Primary()) {
+            mecanumDrive.complexDrive(p1.getOriginalPad(), telemetry);
+        }
+        else {
+            mecanumDrive.complexDrive(p2.getOriginalPad(), telemetry);
+        }
+
+        if (gamepad1.a || gamepad2.a) {
             grabber.setPower(1);
         }
-        else if (!gamepad1.a) {
+        else if (!gamepad1.a || !gamepad2.a) {
             grabber.setPower(0);
         }
-        if (gamepad1.b) {
+        if (gamepad1.b || gamepad2.b) {
             grabber.setPower(-1);
         }
-        else if (!gamepad1.b) {
+        else if (!gamepad1.b || !gamepad2.b) {
             grabber.setPower(0);
         }
 
         // dumper
-        if (p1.x.isDown()) {
+        if (p1.x.isDown() || p2.x.isDown()) {
             dumper.setPosition(.5);
             dumperDown = !dumperDown;
         }
@@ -74,7 +90,7 @@ public class Basic extends OpMode {
         }
 
 
-        // elevator
+        // elevator, need to get p1 working before i get p2 working
         if (p1.dpadUp.isDown() && (elevatorStatus.equals(ElevatorStatus.STOPPED))) {
             elevator.setPower(1);
             elevatorStatus = ElevatorStatus.RAISING;
@@ -87,15 +103,6 @@ public class Basic extends OpMode {
             elevator.setPower(0);
             elevatorStatus = ElevatorStatus.STOPPED;
         }
-        /*else if (p1.dpadUp.isDown() && (!elevatorStatus.equals(ElevatorStatus.RAISING))) {
-            elevator.setPower(0);
-            elevatorStatus = ElevatorStatus.STOPPED;
-        }*/
-
-        /*if (p1.x.isDown()) {
-            dumper.setPosition(1);
-            dumperDown = !dumperDown;
-        }*/
 
         telemetry.addData("Elevator", elevatorStatus.toString());
         telemetry.addData("Dumper", dumper.getPosition());

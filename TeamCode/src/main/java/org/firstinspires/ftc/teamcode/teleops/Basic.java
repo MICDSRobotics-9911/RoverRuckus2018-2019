@@ -33,6 +33,7 @@ public class Basic extends OpMode {
     private Controller p1;
     private Controller p2;
     private AccessControl accessControl;
+    private boolean halfSpeed = false;
 
     public void init() {
         telemetry.addData("Status", "Initializing");
@@ -57,14 +58,25 @@ public class Basic extends OpMode {
     public void loop() {
         telemetry.addData("Grabber Positiion", grabber.getCurrentPosition());
         telemetry.addData("Angle", imuWrapper.getOrientation().toAngleUnit(AngleUnit.RADIANS).firstAngle);
+        telemetry.addData("Half-Speed", halfSpeed);
 
         // change control of mecanum drive
         if (p1.start.isDown() || p2.start.isDown()) {
             this.accessControl.changeAccess();
         }
 
+        // half-speed
+        if (p1.y.isDown() || p2.y.isDown()) {
+            halfSpeed = !halfSpeed;
+        }
+
         if (accessControl.isG1Primary()) {
-            mecanumDrive.complexDrive(p1.getOriginalPad(), telemetry);
+            if (halfSpeed) {
+                mecanumDrive.complexDrive(p1.getOriginalPad(), telemetry, 0.5);
+            }
+            else {
+                mecanumDrive.complexDrive(p1.getOriginalPad(), telemetry);
+            }
         }
         else {
             mecanumDrive.complexDrive(p2.getOriginalPad(), telemetry);
@@ -91,7 +103,6 @@ public class Basic extends OpMode {
         else {
             dumper.setPosition(1);
         }
-
 
         // elevator, need to get p1 working before i get p2 working
         if (p1.dpadUp.isDown() && (elevatorStatus.equals(ElevatorStatus.STOPPED))) {

@@ -22,7 +22,7 @@ public class Basic extends OpMode {
     private DcMotor grabber;
     private DcMotor elevator;
 
-    private boolean dumperDown;thisfasdf
+    private boolean dumperDown;
     private Servo dumper;
     private IMUWrapper imuWrapper;
     private ElevatorStatus elevatorStatus = ElevatorStatus.STOPPED;

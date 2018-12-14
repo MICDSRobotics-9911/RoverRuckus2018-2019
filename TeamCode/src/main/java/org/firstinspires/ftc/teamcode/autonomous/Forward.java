@@ -35,6 +35,7 @@ import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.Servo;
+import com.sun.tools.javac.comp.Lower;
 
 import org.firstinspires.ftc.robotcore.external.ClassFactory;
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
@@ -74,7 +75,7 @@ public class Forward extends LinearOpMode {
     private IMUWrapper imuWrapper;
     private Servo dumper;
     private GoldPosition goldPosition = GoldPosition.UNKNOWN;
-    private int step = 1;
+    private int step = 0;
 
     /*
      * IMPORTANT: You need to obtain your own license key to use Vuforia. The string below with which
@@ -132,9 +133,16 @@ public class Forward extends LinearOpMode {
         if (opModeIsActive()) {
             if (step == 0) {
                 Lowering.lowerRobot(this, this.elevator);
-                this.mecanumDrive.complexDrive(MecanumDrive.Direction.UP.angle(), 1, 0);
-                sleep(TimeOffsetVoltage.calculateDistance((hardwareMap.voltageSensor.get("Expansion Hub 10").getVoltage()), 10));
+                this.mecanumDrive.complexDrive(MecanumDrive.Direction.UP.angle(), 0.5, 0);
+                sleep(TimeOffsetVoltage.calculateDistance((hardwareMap.voltageSensor.get("Expansion Hub 10").getVoltage()), 18));
+                //sleep(250);
                 this.mecanumDrive.stopMoving();
+                Lowering.raiseRobot(this, elevator);
+                this.mecanumDrive.complexDrive(MecanumDrive.Direction.DOWN.angle(), 0.5, 0);
+                sleep(TimeOffsetVoltage.calculateDistance((hardwareMap.voltageSensor.get("Expansion Hub 10").getVoltage()), 18));
+                //sleep(250);
+                this.mecanumDrive.stopMoving();
+                step++;
 
                 /*this.mecanumDrive.complexDrive(0, -1, 0);
                 this.sleep(500);
@@ -189,6 +197,38 @@ public class Forward extends LinearOpMode {
                                 }
                             }
                         }
+                        else if (updatedRecognitions.size() == 3) {
+                            int goldMineralX = -1;
+                            int silverMineral1X = -1;
+                            int silverMineral2X = -1;
+                            for (Recognition recognition : updatedRecognitions) {
+                                if (recognition.getLabel().equals(LABEL_GOLD_MINERAL)) {
+                                    goldMineralX = (int) recognition.getLeft();
+                                } else if (silverMineral1X == -1) {
+                                    silverMineral1X = (int) recognition.getLeft();
+                                } else {
+                                    silverMineral2X = (int) recognition.getLeft();
+                                }
+                            }
+                            if (goldMineralX != -1 && silverMineral1X != -1 && silverMineral2X != -1) {
+                                if (goldMineralX < silverMineral1X && goldMineralX < silverMineral2X) {
+                                    telemetry.addData("Gold Mineral Position", "Left");
+                                    Log.i("[Knock]", "Left");
+                                    goldPosition = GoldPosition.LEFT;
+                                    step++;
+                                } else if (goldMineralX > silverMineral1X && goldMineralX > silverMineral2X) {
+                                    telemetry.addData("Gold Mineral Position", "Right");
+                                    Log.i("[Knock]", "Right");
+                                    goldPosition = GoldPosition.RIGHT;
+                                    step++;
+                                } else {
+                                    telemetry.addData("Gold Mineral Position", "Center");
+                                    Log.i("[Knock]", "Center");
+                                    goldPosition = GoldPosition.CENTER;
+                                    step++;
+                                }
+                            }
+                        }
                         telemetry.update();
                     }
                 }
@@ -218,6 +258,7 @@ public class Forward extends LinearOpMode {
                 }
 
                 if (step == 3) {
+                    Lowering.raiseRobot(this, elevator);
                     this.mecanumDrive.stopMoving();
                     this.mecanumDrive.complexDrive(MecanumDrive.Direction.LEFT.angle(), 1, 0);
                     sleep(TimeOffsetVoltage.calculateDistance((hardwareMap.voltageSensor.get("Expansion Hub 10").getVoltage()), 60));

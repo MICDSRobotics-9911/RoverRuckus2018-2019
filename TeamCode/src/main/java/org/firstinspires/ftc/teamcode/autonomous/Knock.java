@@ -34,6 +34,7 @@ import android.util.Log;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.hardware.DcMotor;
+import com.qualcomm.robotcore.hardware.Servo;
 
 import org.firstinspires.ftc.robotcore.external.ClassFactory;
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
@@ -52,10 +53,10 @@ import java.util.List;
 /**
  * This 2018-2019 OpMode illustrates the basics of using the TensorFlow Object Detection API to
  * determine the position of the gold and silver minerals.
- *
+ * <p>
  * Use Android Studio to Copy this Class, and Paste it into your team's code folder with a new name.
  * Remove or comment out the @Disabled line to add this opmode to the Driver Station OpMode list.
- *
+ * <p>
  * IMPORTANT: In order to use this OpMode, you need to obtain your own Vuforia license key as
  * is explained below.
  */
@@ -71,8 +72,9 @@ public class Knock extends LinearOpMode {
     private DcMotor grabber;
     private DcMotor elevator;
     private IMUWrapper imuWrapper;
+    private Servo dumper;
     private GoldPosition goldPosition = GoldPosition.UNKNOWN;
-    private int step = 1;
+    private int step = 0;
 
     /*
      * IMPORTANT: You need to obtain your own license key to use Vuforia. The string below with which
@@ -120,15 +122,28 @@ public class Knock extends LinearOpMode {
         elevator = hardwareMap.get(DcMotor.class, "elevator");
         mecanumDrive = (MecanumDrive) robot.getDrivetrain();
         grabber = hardwareMap.get(DcMotor.class, "grabber");
+        dumper = hardwareMap.get(Servo.class, "dumper");
         imuWrapper = new IMUWrapper(hardwareMap);
 
         this.elevator.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        this.dumper.setDirection(Servo.Direction.FORWARD);
         waitForStart();
 
         if (opModeIsActive()) {
             if (step == 0) {
                 Lowering.lowerRobot(this, this.elevator);
-                this.mecanumDrive.complexDrive(0, -1, 0);
+                this.mecanumDrive.complexDrive(MecanumDrive.Direction.UP.angle(), 0.5, 0);
+                sleep(TimeOffsetVoltage.calculateDistance((hardwareMap.voltageSensor.get("Expansion Hub 10").getVoltage()), 18));
+                //sleep(250);
+                this.mecanumDrive.stopMoving();
+                Lowering.raiseRobot(this, elevator);
+                this.mecanumDrive.complexDrive(MecanumDrive.Direction.DOWN.angle(), 0.5, 0);
+                sleep(TimeOffsetVoltage.calculateDistance((hardwareMap.voltageSensor.get("Expansion Hub 10").getVoltage()), 18));
+                //sleep(250);
+                this.mecanumDrive.stopMoving();
+                step++;
+
+                /*this.mecanumDrive.complexDrive(0, -1, 0);
                 this.sleep(500);
                 this.mecanumDrive.stopMoving();
                 this.mecanumDrive.complexDrive(MecanumDrive.Direction.LEFT.angle(), 1, 0);
@@ -138,7 +153,7 @@ public class Knock extends LinearOpMode {
                 this.mecanumDrive.stopMoving();
                 this.mecanumDrive.complexDrive(MecanumDrive.Direction.RIGHT.angle(), 1, 0);
                 sleep(500);
-                this.mecanumDrive.stopMoving();
+                this.mecanumDrive.stopMoving();*/
             }
 
             /** Activate Tensor Flow Object Detection. */
@@ -153,40 +168,67 @@ public class Knock extends LinearOpMode {
                     // the last time that call was made.
                     List<Recognition> updatedRecognitions = tfod.getUpdatedRecognitions();
                     if (updatedRecognitions != null) {
-                      telemetry.addData("# Object Detected", updatedRecognitions.size());
-                      if (updatedRecognitions.size() == 3) {
-                        int goldMineralX = -1;
-                        int silverMineral1X = -1;
-                        int silverMineral2X = -1;
-                        for (Recognition recognition : updatedRecognitions) {
-                          if (recognition.getLabel().equals(LABEL_GOLD_MINERAL)) {
-                            goldMineralX = (int) recognition.getLeft();
-                          } else if (silverMineral1X == -1) {
-                            silverMineral1X = (int) recognition.getLeft();
-                          } else {
-                            silverMineral2X = (int) recognition.getLeft();
-                          }
+                        telemetry.addData("# Object Detected", updatedRecognitions.size());
+                        if (updatedRecognitions.size() == 2) {
+                            int goldMineralX = -1;
+                            int silverMineral1X = -1;
+                            for (Recognition recognition : updatedRecognitions) {
+                                if (recognition.getLabel().equals(LABEL_GOLD_MINERAL)) {
+                                    goldMineralX = (int) recognition.getLeft();
+                                } else {
+                                    silverMineral1X = (int) recognition.getLeft();
+                                }
+                            }
+
+                            if (goldMineralX == -1) {
+                                telemetry.addData("Gold Mineral Position", "Left");
+                                goldPosition = GoldPosition.LEFT;
+                                step++;
+                            } else {
+                                if (goldMineralX < silverMineral1X) {
+                                    telemetry.addData("Gold Mineral Position", "Center");
+                                    goldPosition = GoldPosition.CENTER;
+                                    step++;
+                                } else {
+                                    telemetry.addData("Gold Mineral Position", "Right");
+                                    goldPosition = GoldPosition.RIGHT;
+                                    step++;
+                                }
+                            }
                         }
-                        if (goldMineralX != -1 && silverMineral1X != -1 && silverMineral2X != -1) {
-                          if (goldMineralX < silverMineral1X && goldMineralX < silverMineral2X) {
-                            telemetry.addData("Gold Mineral Position", "Left");
-                              Log.i("[Knock]", "Left");
-                            goldPosition = GoldPosition.LEFT;
-                              step++;
-                          } else if (goldMineralX > silverMineral1X && goldMineralX > silverMineral2X) {
-                            telemetry.addData("Gold Mineral Position", "Right");
-                              Log.i("[Knock]", "Right");
-                            goldPosition = GoldPosition.RIGHT;
-                            step++;
-                          } else {
-                            telemetry.addData("Gold Mineral Position", "Center");
-                              Log.i("[Knock]", "Center");
-                            goldPosition = GoldPosition.CENTER;
-                              step++;
-                          }
+                        else if (updatedRecognitions.size() == 3) {
+                            int goldMineralX = -1;
+                            int silverMineral1X = -1;
+                            int silverMineral2X = -1;
+                            for (Recognition recognition : updatedRecognitions) {
+                                if (recognition.getLabel().equals(LABEL_GOLD_MINERAL)) {
+                                    goldMineralX = (int) recognition.getLeft();
+                                } else if (silverMineral1X == -1) {
+                                    silverMineral1X = (int) recognition.getLeft();
+                                } else {
+                                    silverMineral2X = (int) recognition.getLeft();
+                                }
+                            }
+                            if (goldMineralX != -1 && silverMineral1X != -1 && silverMineral2X != -1) {
+                                if (goldMineralX < silverMineral1X && goldMineralX < silverMineral2X) {
+                                    telemetry.addData("Gold Mineral Position", "Left");
+                                    Log.i("[Knock]", "Left");
+                                    goldPosition = GoldPosition.LEFT;
+                                    step++;
+                                } else if (goldMineralX > silverMineral1X && goldMineralX > silverMineral2X) {
+                                    telemetry.addData("Gold Mineral Position", "Right");
+                                    Log.i("[Knock]", "Right");
+                                    goldPosition = GoldPosition.RIGHT;
+                                    step++;
+                                } else {
+                                    telemetry.addData("Gold Mineral Position", "Center");
+                                    Log.i("[Knock]", "Center");
+                                    goldPosition = GoldPosition.CENTER;
+                                    step++;
+                                }
+                            }
                         }
-                      }
-                      telemetry.update();
+                        telemetry.update();
                     }
                 }
 
@@ -210,12 +252,12 @@ public class Knock extends LinearOpMode {
                         default:
                             break;
                     }
-                }
-                else {
+                } else {
                     continue;
                 }
 
                 if (step == 3) {
+                    Lowering.raiseRobot(this, elevator);
                     this.mecanumDrive.stopMoving();
                     this.mecanumDrive.complexDrive(MecanumDrive.Direction.LEFT.angle(), 1, 0);
                     sleep(TimeOffsetVoltage.calculateDistance((hardwareMap.voltageSensor.get("Expansion Hub 10").getVoltage()), 60));
@@ -228,30 +270,32 @@ public class Knock extends LinearOpMode {
                     switch (goldPosition) {
                         case LEFT:
                             this.mecanumDrive.complexDrive(0, 0, -0.3);
-                            sleep(TimeOffsetVoltage.calculateDistance((hardwareMap.voltageSensor.get("Expansion Hub 10").getVoltage()), 72));
+                            sleep(TimeOffsetVoltage.calculateDistance((hardwareMap.voltageSensor.get("Expansion Hub 10").getVoltage()), 48));
                             this.mecanumDrive.stopMoving();
                             step++;
                             break;
                         case CENTER:
                             this.mecanumDrive.complexDrive(MecanumDrive.Direction.LEFT.angle(), 1, 0);
-                            sleep(TimeOffsetVoltage.calculateDistance((hardwareMap.voltageSensor.get("Expansion Hub 10").getVoltage()), 75));
+                            sleep(TimeOffsetVoltage.calculateDistance((hardwareMap.voltageSensor.get("Expansion Hub 10").getVoltage()), 30));
                             this.mecanumDrive.stopMoving();
                             step++;
                             break;
                         case RIGHT:
                             this.mecanumDrive.complexDrive(0, 0, 0.3);
-                            sleep(TimeOffsetVoltage.calculateDistance((hardwareMap.voltageSensor.get("Expansion Hub 10").getVoltage()), 72));
+                            sleep(TimeOffsetVoltage.calculateDistance((hardwareMap.voltageSensor.get("Expansion Hub 10").getVoltage()), 48));
                             this.mecanumDrive.stopMoving();
                             step++;
                             break;
                     }
                 }
 
-                if (step == 5) {
-                    this.mecanumDrive.complexDrive(MecanumDrive.Direction.UP.angle(), 1, 0);
-                    sleep(TimeOffsetVoltage.calculateDistance((hardwareMap.voltageSensor.get("Expansion Hub 10").getVoltage()), 60));
+                // drop the arm into the pit
+                /*if (step == 5) {
+                    this.mecanumDrive.complexDrive(MecanumDrive.Direction.LEFT.angle(), 1, 0);
+                    sleep(TimeOffsetVoltage.calculateDistance((hardwareMap.voltageSensor.get("Expansion Hub 10").getVoltage()), 45));
                     this.mecanumDrive.stopMoving();
-                }
+                    this.dumper.setPosition(1);
+                }*/
 
                 telemetry.update();
             }
@@ -285,7 +329,7 @@ public class Knock extends LinearOpMode {
      */
     private void initTfod() {
         int tfodMonitorViewId = hardwareMap.appContext.getResources().getIdentifier(
-            "tfodMonitorViewId", "id", hardwareMap.appContext.getPackageName());
+                "tfodMonitorViewId", "id", hardwareMap.appContext.getPackageName());
         TFObjectDetector.Parameters tfodParameters = new TFObjectDetector.Parameters(tfodMonitorViewId);
         tfod = ClassFactory.getInstance().createTFObjectDetector(tfodParameters, vuforia);
         tfod.loadModelFromAsset(TFOD_MODEL_ASSET, LABEL_GOLD_MINERAL, LABEL_SILVER_MINERAL);

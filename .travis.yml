@@ -2,6 +2,10 @@ language: android
 jdk: oraclejdk8
 sudo: true
 
+before_install:
+ - chmod +x gradlew
+
+#
 android:
  components:
   - tools
@@ -17,6 +21,7 @@ android:
 # (We use te default ./gradlew build ConnectedCheck now, so this is unnecessary)
 #script :
 # - gradle assemble
+
 
 script:
  - ./gradlew build ConnectedCheck

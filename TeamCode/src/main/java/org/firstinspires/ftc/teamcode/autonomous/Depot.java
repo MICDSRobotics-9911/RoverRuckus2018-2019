@@ -117,12 +117,12 @@ public class Depot extends LinearOpMode {
             if (step == 0) {
                 Lowering.lowerRobot(this, this.elevator);
                 this.mecanumDrive.complexDrive(MecanumDrive.Direction.UP.angle(), 0.5, 0);
-                sleep(TimeOffsetVoltage.calculateDistance((hardwareMap.voltageSensor.get("Expansion Hub 10").getVoltage()), 18));
+                sleep(TimeOffsetVoltage.calculateDistance((hardwareMap.voltageSensor.get("Expansion Hub 10").getVoltage()), 19));
                 //sleep(250);
                 this.mecanumDrive.stopMoving();
                 Lowering.raiseRobot(this, elevator);
                 this.mecanumDrive.complexDrive(MecanumDrive.Direction.DOWN.angle(), 0.5, 0);
-                sleep(TimeOffsetVoltage.calculateDistance((hardwareMap.voltageSensor.get("Expansion Hub 10").getVoltage()), 16));
+                sleep(TimeOffsetVoltage.calculateDistance((hardwareMap.voltageSensor.get("Expansion Hub 10").getVoltage()), 14));
                 //sleep(250);
                 this.mecanumDrive.stopMoving();
                 step++;
@@ -266,13 +266,24 @@ public class Depot extends LinearOpMode {
 
                 // drop the arm into the pit
                 if (step == 5) {
-                    this.mecanumDrive.complexDrive(MecanumDrive.Direction.LEFT.angle(), 1, 0);
-                    sleep(TimeOffsetVoltage.calculateDistance((hardwareMap.voltageSensor.get("Expansion Hub 10").getVoltage()), 45));
-                    this.mecanumDrive.stopMoving();
-                    dumper.setDirection(DcMotorSimple.Direction.REVERSE);
-                    dumper.setPower(1);
-                    this.sleep(1200);
-                    dumper.setPower(0);
+                    if (goldPosition.equals(GoldPosition.CENTER)) {
+                        this.mecanumDrive.complexDrive(MecanumDrive.Direction.LEFT.angle(), 1, 0);
+                        sleep(TimeOffsetVoltage.calculateDistance((hardwareMap.voltageSensor.get("Expansion Hub 10").getVoltage()), 35));
+                        this.mecanumDrive.stopMoving();
+                        dumper.setDirection(DcMotorSimple.Direction.REVERSE);
+                        dumper.setPower(1);
+                        this.sleep(1200);
+                        dumper.setPower(0);
+                    }
+                    else {
+                        this.mecanumDrive.complexDrive(MecanumDrive.Direction.LEFT.angle(), 1, 0);
+                        sleep(TimeOffsetVoltage.calculateDistance((hardwareMap.voltageSensor.get("Expansion Hub 10").getVoltage()), 45));
+                        this.mecanumDrive.stopMoving();
+                        dumper.setDirection(DcMotorSimple.Direction.REVERSE);
+                        dumper.setPower(1);
+                        this.sleep(1200);
+                        dumper.setPower(0);
+                    }
                 }
                 telemetry.update();
             }

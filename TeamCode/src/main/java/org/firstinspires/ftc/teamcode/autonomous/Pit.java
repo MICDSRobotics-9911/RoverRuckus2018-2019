@@ -44,6 +44,7 @@ import org.firstinspires.ftc.robotcore.external.navigation.VuforiaLocalizer;
 import org.firstinspires.ftc.robotcore.external.navigation.VuforiaLocalizer.CameraDirection;
 import org.firstinspires.ftc.robotcore.external.tfod.Recognition;
 import org.firstinspires.ftc.robotcore.external.tfod.TFObjectDetector;
+import org.firstinspires.ftc.teamcode.data.ElementParser;
 import org.firstinspires.ftc.teamcode.data.GoldPosition;
 import org.firstinspires.ftc.teamcode.robotplus.autonomous.TimeOffsetVoltage;
 import org.firstinspires.ftc.teamcode.robotplus.hardware.IMUWrapper;
@@ -116,12 +117,12 @@ public class Pit extends LinearOpMode {
             if (step == 0) {
                 Lowering.lowerRobot(this, this.elevator);
                 this.mecanumDrive.complexDrive(MecanumDrive.Direction.UP.angle(), 0.5, 0);
-                sleep(TimeOffsetVoltage.calculateDistance((hardwareMap.voltageSensor.get("Expansion Hub 10").getVoltage()), 18));
+                sleep(TimeOffsetVoltage.calculateDistance((hardwareMap.voltageSensor.get("Expansion Hub 10").getVoltage()), 19));
                 //sleep(250);
                 this.mecanumDrive.stopMoving();
                 Lowering.raiseRobot(this, elevator);
                 this.mecanumDrive.complexDrive(MecanumDrive.Direction.DOWN.angle(), 0.5, 0);
-                sleep(TimeOffsetVoltage.calculateDistance((hardwareMap.voltageSensor.get("Expansion Hub 10").getVoltage()), 16));
+                sleep(TimeOffsetVoltage.calculateDistance((hardwareMap.voltageSensor.get("Expansion Hub 10").getVoltage()), 14));
                 //sleep(250);
                 this.mecanumDrive.stopMoving();
                 step++;
@@ -195,6 +196,34 @@ public class Pit extends LinearOpMode {
                                     telemetry.addData("Gold Mineral Position", "Center");
                                     Log.i("[Pit]", "Center");
                                     goldPosition = GoldPosition.CENTER;
+                                    step++;
+                                }
+                            }
+                        }
+                        if (updatedRecognitions.size() > 3) {
+                            updatedRecognitions = ElementParser.parseElements(updatedRecognitions);
+                            int goldMineralX = -1;
+                            int silverMineral1X = -1;
+                            for (Recognition recognition : updatedRecognitions) {
+                                if (recognition.getLabel().equals(LABEL_GOLD_MINERAL)) {
+                                    goldMineralX = (int) recognition.getLeft();
+                                } else {
+                                    silverMineral1X = (int) recognition.getLeft();
+                                }
+                            }
+
+                            if (goldMineralX == -1) {
+                                telemetry.addData("Gold Mineral Position", "Left");
+                                goldPosition = GoldPosition.LEFT;
+                                step++;
+                            } else {
+                                if (goldMineralX < silverMineral1X) {
+                                    telemetry.addData("Gold Mineral Position", "Center");
+                                    goldPosition = GoldPosition.CENTER;
+                                    step++;
+                                } else {
+                                    telemetry.addData("Gold Mineral Position", "Right");
+                                    goldPosition = GoldPosition.RIGHT;
                                     step++;
                                 }
                             }

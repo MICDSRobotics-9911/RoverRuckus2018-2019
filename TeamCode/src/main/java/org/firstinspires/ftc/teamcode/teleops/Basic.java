@@ -90,16 +90,13 @@ public class Basic extends OpMode {
         }
 
         // grabber
-        if (gamepad1.a || gamepad2.a) {
+        if (p1.a.isDown() || p2.a.isDown()) {
             grabber.setPower(1);
         }
-        else if (!gamepad1.a || !gamepad2.a) {
-            grabber.setPower(0);
-        }
-        if (gamepad1.b || gamepad2.b) {
+        else if (gamepad1.b || gamepad2.b) {
             grabber.setPower(-1);
         }
-        else if (!gamepad1.b || !gamepad2.b) {
+        else {
             grabber.setPower(0);
         }
 
@@ -123,21 +120,21 @@ public class Basic extends OpMode {
         }*/
 
         // elevator, need to get p1 working before i get p2 working
-        if (p1.dpadUp.isDown() && (elevatorStatus.equals(ElevatorStatus.STOPPED))) {
+        if (gamepad2.dpad_up && (elevatorStatus.equals(ElevatorStatus.STOPPED))) {
             elevator.setPower(1);
             elevatorStatus = ElevatorStatus.RAISING;
         }
-        else if (p1.dpadDown.isDown() && (elevatorStatus.equals(ElevatorStatus.STOPPED))) {
+        else if (gamepad2.dpad_down && (elevatorStatus.equals(ElevatorStatus.STOPPED))) {
             elevator.setPower(-1);
             elevatorStatus = ElevatorStatus.LOWERING;
         }
-        else if ((p1.dpadDown.isDown() || p1.dpadUp.isDown())&& (!elevatorStatus.equals(ElevatorStatus.STOPPED))) {
+        else if ((gamepad1.dpad_down || p1.dpadUp.isDown())&& (!elevatorStatus.equals(ElevatorStatus.STOPPED))) {
             elevator.setPower(0);
             elevatorStatus = ElevatorStatus.STOPPED;
         }
 
         // sampler
-        if ((p1.x.isDown() || p2.x.isDown())) {
+        if ((gamepad1.x || gamepad2.x)) {
             this.sampler.setPower(1);
         }
         else {

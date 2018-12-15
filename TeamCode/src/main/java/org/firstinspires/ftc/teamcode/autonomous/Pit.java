@@ -33,7 +33,9 @@ import android.util.Log;
 
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
+import com.qualcomm.robotcore.hardware.CRServo;
 import com.qualcomm.robotcore.hardware.DcMotor;
+import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.Servo;
 
 import org.firstinspires.ftc.robotcore.external.ClassFactory;
@@ -51,10 +53,10 @@ import org.firstinspires.ftc.teamcode.robotplus.hardware.Robot;
 import java.util.List;
 
 /**
- * Knock is designed to hit the gold and stop
+ * Pit is designed to hit the gold and stop
  */
-@Autonomous(name = "Knock", group = "Concept")
-public class Knock extends LinearOpMode {
+@Autonomous(name = "Pit", group = "Concept")
+public class Pit extends LinearOpMode {
     private static final String TFOD_MODEL_ASSET = "RoverRuckus.tflite";
     private static final String LABEL_GOLD_MINERAL = "Gold Mineral";
     private static final String LABEL_SILVER_MINERAL = "Silver Mineral";
@@ -65,22 +67,10 @@ public class Knock extends LinearOpMode {
     private DcMotor grabber;
     private DcMotor elevator;
     private IMUWrapper imuWrapper;
-    private Servo dumper;
+    private CRServo dumper;
     private GoldPosition goldPosition = GoldPosition.UNKNOWN;
     private int step = 0;
 
-    /*
-     * IMPORTANT: You need to obtain your own license key to use Vuforia. The string below with which
-     * 'parameters.vuforiaLicenseKey' is initialized is for illustration only, and will not function.
-     * A Vuforia 'Development' license key, can be obtained free of charge from the Vuforia developer
-     * web site at https://developer.vuforia.com/license-manager.
-     *
-     * Vuforia license keys are always 380 characters long, and look as if they contain mostly
-     * random data. As an example, here is a example of a fragment of a valid key:
-     *      ... yIgIzTqZ4mWjk9wd3cZO9T1axEqzuhxoGlfOOI2dRzKS4T0hQ8kT ...
-     * Once you've obtained a license key, copy the string from the Vuforia web site
-     * and paste it in to your code on the next line, between the double quotes.
-     */
     private static final String VUFORIA_KEY = "AZDepIf/////AAAAGfXxylZkt0YriAZz29imD+JnpWB4sxwIldmqfmE2S0NQ5QJ+R8FF9kqvBAeUoFLVcXawrLuNS1salfES/URf32WEkCus6PRLYzToyuvGnoBHtXJBW9nr94CSnAFvWjPrYVMEQhy7kZeuMEkhvUn8O/4DZ7f8vP1hPC7xKugpmGY0LTvxd/umhQxy9dl28mkUQWHcselYnHrOgrW4XvNq5exF67YoK3cQDjrodu02wmmFcoeHr78xyabZqOif8hk9Lk+F/idAMZcB1un86Goawbto6qTP7/SnXAbAedRrSKCGp/UuYa02c2Y5rteZMMtdSE7iL824A4kmwVZtg5biQy3jE0zAjsFQD7tztRiMGLxt";
 
     /**
@@ -115,11 +105,11 @@ public class Knock extends LinearOpMode {
         elevator = hardwareMap.get(DcMotor.class, "elevator");
         mecanumDrive = (MecanumDrive) robot.getDrivetrain();
         grabber = hardwareMap.get(DcMotor.class, "grabber");
-        dumper = hardwareMap.get(Servo.class, "dumper");
+        dumper = hardwareMap.get(CRServo.class, "dumper");
         imuWrapper = new IMUWrapper(hardwareMap);
 
         this.elevator.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
-        this.dumper.setDirection(Servo.Direction.FORWARD);
+        this.dumper.setDirection(DcMotorSimple.Direction.REVERSE);
         waitForStart();
 
         if (opModeIsActive()) {
@@ -131,22 +121,10 @@ public class Knock extends LinearOpMode {
                 this.mecanumDrive.stopMoving();
                 Lowering.raiseRobot(this, elevator);
                 this.mecanumDrive.complexDrive(MecanumDrive.Direction.DOWN.angle(), 0.5, 0);
-                sleep(TimeOffsetVoltage.calculateDistance((hardwareMap.voltageSensor.get("Expansion Hub 10").getVoltage()), 18));
+                sleep(TimeOffsetVoltage.calculateDistance((hardwareMap.voltageSensor.get("Expansion Hub 10").getVoltage()), 16));
                 //sleep(250);
                 this.mecanumDrive.stopMoving();
                 step++;
-
-                /*this.mecanumDrive.complexDrive(0, -1, 0);
-                this.sleep(500);
-                this.mecanumDrive.stopMoving();
-                this.mecanumDrive.complexDrive(MecanumDrive.Direction.LEFT.angle(), 1, 0);
-                sleep(250);
-                this.mecanumDrive.complexDrive(MecanumDrive.Direction.UP.angle(), 1, 0);
-                sleep(500);
-                this.mecanumDrive.stopMoving();
-                this.mecanumDrive.complexDrive(MecanumDrive.Direction.RIGHT.angle(), 1, 0);
-                sleep(500);
-                this.mecanumDrive.stopMoving();*/
             }
 
             /** Activate Tensor Flow Object Detection. */
@@ -205,17 +183,17 @@ public class Knock extends LinearOpMode {
                             if (goldMineralX != -1 && silverMineral1X != -1 && silverMineral2X != -1) {
                                 if (goldMineralX < silverMineral1X && goldMineralX < silverMineral2X) {
                                     telemetry.addData("Gold Mineral Position", "Left");
-                                    Log.i("[Knock]", "Left");
+                                    Log.i("[Pit]", "Left");
                                     goldPosition = GoldPosition.LEFT;
                                     step++;
                                 } else if (goldMineralX > silverMineral1X && goldMineralX > silverMineral2X) {
                                     telemetry.addData("Gold Mineral Position", "Right");
-                                    Log.i("[Knock]", "Right");
+                                    Log.i("[Pit]", "Right");
                                     goldPosition = GoldPosition.RIGHT;
                                     step++;
                                 } else {
                                     telemetry.addData("Gold Mineral Position", "Center");
-                                    Log.i("[Knock]", "Center");
+                                    Log.i("[Pit]", "Center");
                                     goldPosition = GoldPosition.CENTER;
                                     step++;
                                 }
@@ -282,14 +260,17 @@ public class Knock extends LinearOpMode {
                     }
                 }
 
-                // drop the arm into the pit
-                /*if (step == 5) {
-                    this.mecanumDrive.complexDrive(MecanumDrive.Direction.LEFT.angle(), 1, 0);
-                    sleep(TimeOffsetVoltage.calculateDistance((hardwareMap.voltageSensor.get("Expansion Hub 10").getVoltage()), 45));
+                /*
+                if (step == 5) {
+                    this.mecanumDrive.complexDrive(0, 0, 0.3);
+                    sleep(TimeOffsetVoltage.calculateDistance((hardwareMap.voltageSensor.get("Expansion Hub 10").getVoltage()), 55));
                     this.mecanumDrive.stopMoving();
-                    this.dumper.setPosition(1);
-                }*/
-
+                    this.grabber.setPower(1);
+                    sleep(6000);
+                    this.grabber.setPower(0);
+                    step++;
+                }
+                */
                 telemetry.update();
             }
         }

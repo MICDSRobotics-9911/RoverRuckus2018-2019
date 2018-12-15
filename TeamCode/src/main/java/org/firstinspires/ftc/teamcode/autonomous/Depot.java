@@ -33,7 +33,9 @@ import android.util.Log;
 
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
+import com.qualcomm.robotcore.hardware.CRServo;
 import com.qualcomm.robotcore.hardware.DcMotor;
+import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.Servo;
 import com.sun.tools.javac.comp.Lower;
 
@@ -52,10 +54,10 @@ import org.firstinspires.ftc.teamcode.robotplus.hardware.Robot;
 import java.util.List;
 
 /**
- * Forward will knock the gold, park in the square, and drop the team marker
+ * Depot will knock the gold, park in the square, and drop the team marker. This isn't the one that lowers the arm into the pit
  */
-@Autonomous(name = "Forward", group = "Concept")
-public class Forward extends LinearOpMode {
+@Autonomous(name = "Depot", group = "Concept")
+public class Depot extends LinearOpMode {
     private static final String TFOD_MODEL_ASSET = "RoverRuckus.tflite";
     private static final String LABEL_GOLD_MINERAL = "Gold Mineral";
     private static final String LABEL_SILVER_MINERAL = "Silver Mineral";
@@ -66,22 +68,10 @@ public class Forward extends LinearOpMode {
     private DcMotor grabber;
     private DcMotor elevator;
     private IMUWrapper imuWrapper;
-    private Servo dumper;
+    private CRServo dumper;
     private GoldPosition goldPosition = GoldPosition.UNKNOWN;
     private int step = 0;
 
-    /*
-     * IMPORTANT: You need to obtain your own license key to use Vuforia. The string below with which
-     * 'parameters.vuforiaLicenseKey' is initialized is for illustration only, and will not function.
-     * A Vuforia 'Development' license key, can be obtained free of charge from the Vuforia developer
-     * web site at https://developer.vuforia.com/license-manager.
-     *
-     * Vuforia license keys are always 380 characters long, and look as if they contain mostly
-     * random data. As an example, here is a example of a fragment of a valid key:
-     *      ... yIgIzTqZ4mWjk9wd3cZO9T1axEqzuhxoGlfOOI2dRzKS4T0hQ8kT ...
-     * Once you've obtained a license key, copy the string from the Vuforia web site
-     * and paste it in to your code on the next line, between the double quotes.
-     */
     private static final String VUFORIA_KEY = "AZDepIf/////AAAAGfXxylZkt0YriAZz29imD+JnpWB4sxwIldmqfmE2S0NQ5QJ+R8FF9kqvBAeUoFLVcXawrLuNS1salfES/URf32WEkCus6PRLYzToyuvGnoBHtXJBW9nr94CSnAFvWjPrYVMEQhy7kZeuMEkhvUn8O/4DZ7f8vP1hPC7xKugpmGY0LTvxd/umhQxy9dl28mkUQWHcselYnHrOgrW4XvNq5exF67YoK3cQDjrodu02wmmFcoeHr78xyabZqOif8hk9Lk+F/idAMZcB1un86Goawbto6qTP7/SnXAbAedRrSKCGp/UuYa02c2Y5rteZMMtdSE7iL824A4kmwVZtg5biQy3jE0zAjsFQD7tztRiMGLxt";
 
     /**
@@ -116,14 +106,14 @@ public class Forward extends LinearOpMode {
         elevator = hardwareMap.get(DcMotor.class, "elevator");
         mecanumDrive = (MecanumDrive) robot.getDrivetrain();
         grabber = hardwareMap.get(DcMotor.class, "grabber");
-        dumper = hardwareMap.get(Servo.class, "dumper");
+        dumper = hardwareMap.get(CRServo.class, "dumper");
         imuWrapper = new IMUWrapper(hardwareMap);
 
         this.elevator.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
-        this.dumper.setDirection(Servo.Direction.FORWARD);
         waitForStart();
 
         if (opModeIsActive()) {
+            // lower the robot, close elevator, and move back
             if (step == 0) {
                 Lowering.lowerRobot(this, this.elevator);
                 this.mecanumDrive.complexDrive(MecanumDrive.Direction.UP.angle(), 0.5, 0);
@@ -132,22 +122,10 @@ public class Forward extends LinearOpMode {
                 this.mecanumDrive.stopMoving();
                 Lowering.raiseRobot(this, elevator);
                 this.mecanumDrive.complexDrive(MecanumDrive.Direction.DOWN.angle(), 0.5, 0);
-                sleep(TimeOffsetVoltage.calculateDistance((hardwareMap.voltageSensor.get("Expansion Hub 10").getVoltage()), 18));
+                sleep(TimeOffsetVoltage.calculateDistance((hardwareMap.voltageSensor.get("Expansion Hub 10").getVoltage()), 16));
                 //sleep(250);
                 this.mecanumDrive.stopMoving();
                 step++;
-
-                /*this.mecanumDrive.complexDrive(0, -1, 0);
-                this.sleep(500);
-                this.mecanumDrive.stopMoving();
-                this.mecanumDrive.complexDrive(MecanumDrive.Direction.LEFT.angle(), 1, 0);
-                sleep(250);
-                this.mecanumDrive.complexDrive(MecanumDrive.Direction.UP.angle(), 1, 0);
-                sleep(500);
-                this.mecanumDrive.stopMoving();
-                this.mecanumDrive.complexDrive(MecanumDrive.Direction.RIGHT.angle(), 1, 0);
-                sleep(500);
-                this.mecanumDrive.stopMoving();*/
             }
 
             /** Activate Tensor Flow Object Detection. */
@@ -157,6 +135,7 @@ public class Forward extends LinearOpMode {
 
             while (opModeIsActive()) {
                 telemetry.addData("Angle", imuWrapper.getOrientation().toAngleUnit(AngleUnit.RADIANS).firstAngle);
+                // detect the elements
                 if (tfod != null && step == 1) {
                     // getUpdatedRecognitions() will return null if no new information is available since
                     // the last time that call was made.
@@ -206,17 +185,17 @@ public class Forward extends LinearOpMode {
                             if (goldMineralX != -1 && silverMineral1X != -1 && silverMineral2X != -1) {
                                 if (goldMineralX < silverMineral1X && goldMineralX < silverMineral2X) {
                                     telemetry.addData("Gold Mineral Position", "Left");
-                                    Log.i("[Knock]", "Left");
+                                    Log.i("[Pit]", "Left");
                                     goldPosition = GoldPosition.LEFT;
                                     step++;
                                 } else if (goldMineralX > silverMineral1X && goldMineralX > silverMineral2X) {
                                     telemetry.addData("Gold Mineral Position", "Right");
-                                    Log.i("[Knock]", "Right");
+                                    Log.i("[Pit]", "Right");
                                     goldPosition = GoldPosition.RIGHT;
                                     step++;
                                 } else {
                                     telemetry.addData("Gold Mineral Position", "Center");
-                                    Log.i("[Knock]", "Center");
+                                    Log.i("[Pit]", "Center");
                                     goldPosition = GoldPosition.CENTER;
                                     step++;
                                 }
@@ -226,6 +205,7 @@ public class Forward extends LinearOpMode {
                     }
                 }
 
+                // rotate towards the correct element
                 if (!goldPosition.equals(goldPosition.UNKNOWN) && step == 2) {
                     switch (goldPosition) {
                         case LEFT:
@@ -250,11 +230,12 @@ public class Forward extends LinearOpMode {
                     continue;
                 }
 
+                // move towards the element
                 if (step == 3) {
                     Lowering.raiseRobot(this, elevator);
                     this.mecanumDrive.stopMoving();
                     this.mecanumDrive.complexDrive(MecanumDrive.Direction.LEFT.angle(), 1, 0);
-                    sleep(TimeOffsetVoltage.calculateDistance((hardwareMap.voltageSensor.get("Expansion Hub 10").getVoltage()), 60));
+                    sleep(TimeOffsetVoltage.calculateDistance((hardwareMap.voltageSensor.get("Expansion Hub 10").getVoltage()), 65));
                     this.mecanumDrive.stopMoving();
                     step++;
                 }
@@ -288,9 +269,11 @@ public class Forward extends LinearOpMode {
                     this.mecanumDrive.complexDrive(MecanumDrive.Direction.LEFT.angle(), 1, 0);
                     sleep(TimeOffsetVoltage.calculateDistance((hardwareMap.voltageSensor.get("Expansion Hub 10").getVoltage()), 45));
                     this.mecanumDrive.stopMoving();
-                    this.dumper.setPosition(1);
+                    dumper.setDirection(DcMotorSimple.Direction.REVERSE);
+                    dumper.setPower(1);
+                    this.sleep(1200);
+                    dumper.setPower(0);
                 }
-
                 telemetry.update();
             }
         }

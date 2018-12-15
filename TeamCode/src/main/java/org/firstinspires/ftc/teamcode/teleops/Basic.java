@@ -2,7 +2,9 @@ package org.firstinspires.ftc.teamcode.teleops;
 
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
+import com.qualcomm.robotcore.hardware.CRServo;
 import com.qualcomm.robotcore.hardware.DcMotor;
+import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.Servo;
 
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
@@ -24,9 +26,11 @@ public class Basic extends OpMode {
 
     private DcMotor grabber;
     private DcMotor elevator;
+    private DcMotor extender;
 
-    private boolean dumperDown;
-    private Servo dumper;
+    private boolean samplerOn;
+    private CRServo dumper;
+    private CRServo sampler;
     private IMUWrapper imuWrapper;
     private ElevatorStatus elevatorStatus = ElevatorStatus.STOPPED;
 
@@ -45,14 +49,17 @@ public class Basic extends OpMode {
         elevator = hardwareMap.get(DcMotor.class, "elevator");
         mecanumDrive = (MecanumDrive) robot.getDrivetrain();
         grabber = hardwareMap.get(DcMotor.class, "grabber");
-        dumper = hardwareMap.get(Servo.class, "dumper");
-        dumperDown = false;
+        dumper = hardwareMap.get(CRServo.class, "dumper");
+        sampler = hardwareMap.get(CRServo.class, "sampler");
         imuWrapper = new IMUWrapper(hardwareMap);
         accessControl = new AccessControl();
+        extender = hardwareMap.get(DcMotor.class, "extender");
+        samplerOn = false;
 
         // settings
         this.elevator.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
-        this.dumper.setDirection(Servo.Direction.FORWARD);
+        this.dumper.setDirection(DcMotorSimple.Direction.REVERSE);
+        this.sampler.setDirection(DcMotorSimple.Direction.REVERSE);
     }
 
     public void loop() {
@@ -82,6 +89,7 @@ public class Basic extends OpMode {
             mecanumDrive.complexDrive(p2.getOriginalPad(), telemetry);
         }
 
+        // grabber
         if (gamepad1.a || gamepad2.a) {
             grabber.setPower(1);
         }
@@ -95,14 +103,24 @@ public class Basic extends OpMode {
             grabber.setPower(0);
         }
 
-        // dumper
-        if (p1.x.isDown() || p2.x.isDown()) {
-            dumper.setPosition(.5);
-            dumperDown = !dumperDown;
+        // extender
+        if (gamepad1.dpad_right || gamepad2.dpad_right) {
+            extender.setPower(1);
+        }
+        else if (gamepad1.dpad_left || gamepad2.dpad_left) {
+            extender.setPower(-1);
         }
         else {
-            dumper.setPosition(1);
+            extender.setPower(0);
         }
+
+        // dumper
+        /*if (p1.x.isDown() || p2.x.isDown()) {
+            dumper.setPower(-1);
+        }
+        else {
+            dumper.setPower(0);
+        }*/
 
         // elevator, need to get p1 working before i get p2 working
         if (p1.dpadUp.isDown() && (elevatorStatus.equals(ElevatorStatus.STOPPED))) {
@@ -118,8 +136,15 @@ public class Basic extends OpMode {
             elevatorStatus = ElevatorStatus.STOPPED;
         }
 
+        // sampler
+        if ((p1.x.isDown() || p2.x.isDown())) {
+            this.sampler.setPower(1);
+        }
+        else {
+            this.sampler.setPower(0);
+        }
+
         telemetry.addData("Elevator", elevatorStatus.toString());
-        telemetry.addData("Dumper", dumper.getPosition());
         p1.update();
     }
 }

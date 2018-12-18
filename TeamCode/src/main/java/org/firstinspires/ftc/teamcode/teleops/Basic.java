@@ -68,16 +68,22 @@ public class Basic extends OpMode {
         telemetry.addData("Half-Speed", halfSpeed);
 
         // change control of mecanum drive
-        if (p1.start.isDown() || p2.start.isDown()) {
+        if (p1.start.isDown()) {
+            this.accessControl.changeAccess();
+        }
+        else if (gamepad2.start) {
             this.accessControl.changeAccess();
         }
 
         // half-speed
-        if (p1.y.isDown() || p2.y.isDown()) {
+        if (p1.y.isDown()) {
+            halfSpeed = !halfSpeed;
+        }
+        else if (gamepad2.y) {
             halfSpeed = !halfSpeed;
         }
 
-        if (accessControl.isG1Primary()) {
+        else if (accessControl.isG1Primary()) {
             if (halfSpeed) {
                 mecanumDrive.complexDrive(p1.getOriginalPad(), telemetry, 0.5);
             }
@@ -90,10 +96,16 @@ public class Basic extends OpMode {
         }
 
         // grabber
-        if (p1.a.isDown() || p2.a.isDown()) {
+        if (p1.a.isDown()) {
             grabber.setPower(1);
         }
-        else if (gamepad1.b || gamepad2.b) {
+        else if (gamepad2.a) {
+            grabber.setPower(1);
+        }
+        else if (gamepad1.b) {
+            grabber.setPower(-1);
+        }
+        else if (gamepad2.b) {
             grabber.setPower(-1);
         }
         else {
@@ -128,7 +140,11 @@ public class Basic extends OpMode {
             elevator.setPower(-1);
             elevatorStatus = ElevatorStatus.LOWERING;
         }
-        else if ((gamepad1.dpad_down || p1.dpadUp.isDown())&& (!elevatorStatus.equals(ElevatorStatus.STOPPED))) {
+        else if ((gamepad2.dpad_up)&& (!elevatorStatus.equals(ElevatorStatus.STOPPED))) {
+            elevator.setPower(0);
+            elevatorStatus = ElevatorStatus.STOPPED;
+        }
+        else if ((gamepad2.dpad_down)&& (!elevatorStatus.equals(ElevatorStatus.STOPPED))) {
             elevator.setPower(0);
             elevatorStatus = ElevatorStatus.STOPPED;
         }
@@ -142,6 +158,7 @@ public class Basic extends OpMode {
         }
 
         telemetry.addData("Elevator", elevatorStatus.toString());
+        telemetry.addData("IsG1Primary", accessControl.isG1Primary());
         p1.update();
     }
 }

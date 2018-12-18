@@ -44,6 +44,7 @@ import org.firstinspires.ftc.robotcore.external.navigation.VuforiaLocalizer;
 import org.firstinspires.ftc.robotcore.external.navigation.VuforiaLocalizer.CameraDirection;
 import org.firstinspires.ftc.robotcore.external.tfod.Recognition;
 import org.firstinspires.ftc.robotcore.external.tfod.TFObjectDetector;
+import org.firstinspires.ftc.teamcode.data.ElementParser;
 import org.firstinspires.ftc.teamcode.data.GoldPosition;
 import org.firstinspires.ftc.teamcode.robotplus.autonomous.TimeOffsetVoltage;
 import org.firstinspires.ftc.teamcode.robotplus.hardware.IMUWrapper;
@@ -116,12 +117,12 @@ public class Pit extends LinearOpMode {
             if (step == 0) {
                 Lowering.lowerRobot(this, this.elevator);
                 this.mecanumDrive.complexDrive(MecanumDrive.Direction.UP.angle(), 0.5, 0);
-                sleep(TimeOffsetVoltage.calculateDistance((hardwareMap.voltageSensor.get("Expansion Hub 10").getVoltage()), 18));
+                sleep(TimeOffsetVoltage.calculateDistance((hardwareMap.voltageSensor.get("Expansion Hub 10").getVoltage()), 19));
                 //sleep(250);
                 this.mecanumDrive.stopMoving();
                 Lowering.raiseRobot(this, elevator);
                 this.mecanumDrive.complexDrive(MecanumDrive.Direction.DOWN.angle(), 0.5, 0);
-                sleep(TimeOffsetVoltage.calculateDistance((hardwareMap.voltageSensor.get("Expansion Hub 10").getVoltage()), 16));
+                sleep(TimeOffsetVoltage.calculateDistance((hardwareMap.voltageSensor.get("Expansion Hub 10").getVoltage()), 14));
                 //sleep(250);
                 this.mecanumDrive.stopMoving();
                 step++;
@@ -133,13 +134,13 @@ public class Pit extends LinearOpMode {
             }
 
             while (opModeIsActive()) {
-                telemetry.addData("Angle", imuWrapper.getOrientation().toAngleUnit(AngleUnit.RADIANS).firstAngle);
                 if (tfod != null && step == 1) {
                     // getUpdatedRecognitions() will return null if no new information is available since
                     // the last time that call was made.
                     List<Recognition> updatedRecognitions = tfod.getUpdatedRecognitions();
                     if (updatedRecognitions != null) {
                         telemetry.addData("# Object Detected", updatedRecognitions.size());
+                        telemetry.update();
                         if (updatedRecognitions.size() == 2) {
                             int goldMineralX = -1;
                             int silverMineral1X = -1;
@@ -167,34 +168,32 @@ public class Pit extends LinearOpMode {
                                 }
                             }
                         }
-                        else if (updatedRecognitions.size() == 3) {
+                        else if (updatedRecognitions.size() >= 3) {
+                            telemetry.addData("More than three", "true");
+                            telemetry.update();
+                            updatedRecognitions = ElementParser.parseElements(updatedRecognitions);
                             int goldMineralX = -1;
                             int silverMineral1X = -1;
-                            int silverMineral2X = -1;
                             for (Recognition recognition : updatedRecognitions) {
                                 if (recognition.getLabel().equals(LABEL_GOLD_MINERAL)) {
                                     goldMineralX = (int) recognition.getLeft();
-                                } else if (silverMineral1X == -1) {
-                                    silverMineral1X = (int) recognition.getLeft();
                                 } else {
-                                    silverMineral2X = (int) recognition.getLeft();
+                                    silverMineral1X = (int) recognition.getLeft();
                                 }
                             }
-                            if (goldMineralX != -1 && silverMineral1X != -1 && silverMineral2X != -1) {
-                                if (goldMineralX < silverMineral1X && goldMineralX < silverMineral2X) {
-                                    telemetry.addData("Gold Mineral Position", "Left");
-                                    Log.i("[Pit]", "Left");
-                                    goldPosition = GoldPosition.LEFT;
-                                    step++;
-                                } else if (goldMineralX > silverMineral1X && goldMineralX > silverMineral2X) {
-                                    telemetry.addData("Gold Mineral Position", "Right");
-                                    Log.i("[Pit]", "Right");
-                                    goldPosition = GoldPosition.RIGHT;
+
+                            if (goldMineralX == -1) {
+                                telemetry.addData("Gold Mineral Position", "Left");
+                                goldPosition = GoldPosition.LEFT;
+                                step++;
+                            } else {
+                                if (goldMineralX < silverMineral1X) {
+                                    telemetry.addData("Gold Mineral Position", "Center");
+                                    goldPosition = GoldPosition.CENTER;
                                     step++;
                                 } else {
-                                    telemetry.addData("Gold Mineral Position", "Center");
-                                    Log.i("[Pit]", "Center");
-                                    goldPosition = GoldPosition.CENTER;
+                                    telemetry.addData("Gold Mineral Position", "Right");
+                                    goldPosition = GoldPosition.RIGHT;
                                     step++;
                                 }
                             }

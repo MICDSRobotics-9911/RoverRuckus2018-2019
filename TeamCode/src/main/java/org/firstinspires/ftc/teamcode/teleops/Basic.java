@@ -68,16 +68,22 @@ public class Basic extends OpMode {
         telemetry.addData("Half-Speed", halfSpeed);
 
         // change control of mecanum drive
-        if (p1.start.isDown() || p2.start.isDown()) {
+        if (p1.start.isDown()) {
+            this.accessControl.changeAccess();
+        }
+        else if (gamepad2.start) {
             this.accessControl.changeAccess();
         }
 
         // half-speed
-        if (p1.y.isDown() || p2.y.isDown()) {
+        if (p1.y.isDown()) {
+            halfSpeed = !halfSpeed;
+        }
+        else if (gamepad2.y) {
             halfSpeed = !halfSpeed;
         }
 
-        if (accessControl.isG1Primary()) {
+        else if (accessControl.isG1Primary()) {
             if (halfSpeed) {
                 mecanumDrive.complexDrive(p1.getOriginalPad(), telemetry, 0.5);
             }
@@ -90,16 +96,19 @@ public class Basic extends OpMode {
         }
 
         // grabber
-        if (gamepad1.a || gamepad2.a) {
+        if (p1.a.isDown()) {
             grabber.setPower(1);
         }
-        else if (!gamepad1.a || !gamepad2.a) {
-            grabber.setPower(0);
+        else if (gamepad2.a) {
+            grabber.setPower(1);
         }
-        if (gamepad1.b || gamepad2.b) {
+        else if (gamepad1.b) {
             grabber.setPower(-1);
         }
-        else if (!gamepad1.b || !gamepad2.b) {
+        else if (gamepad2.b) {
+            grabber.setPower(-1);
+        }
+        else {
             grabber.setPower(0);
         }
 
@@ -123,21 +132,25 @@ public class Basic extends OpMode {
         }*/
 
         // elevator, need to get p1 working before i get p2 working
-        if (p1.dpadUp.isDown() && (elevatorStatus.equals(ElevatorStatus.STOPPED))) {
+        if (gamepad2.dpad_up && (elevatorStatus.equals(ElevatorStatus.STOPPED))) {
             elevator.setPower(1);
             elevatorStatus = ElevatorStatus.RAISING;
         }
-        else if (p1.dpadDown.isDown() && (elevatorStatus.equals(ElevatorStatus.STOPPED))) {
+        else if (gamepad2.dpad_down && (elevatorStatus.equals(ElevatorStatus.STOPPED))) {
             elevator.setPower(-1);
             elevatorStatus = ElevatorStatus.LOWERING;
         }
-        else if ((p1.dpadDown.isDown() || p1.dpadUp.isDown())&& (!elevatorStatus.equals(ElevatorStatus.STOPPED))) {
+        else if ((gamepad2.dpad_up)&& (!elevatorStatus.equals(ElevatorStatus.STOPPED))) {
+            elevator.setPower(0);
+            elevatorStatus = ElevatorStatus.STOPPED;
+        }
+        else if ((gamepad2.dpad_down)&& (!elevatorStatus.equals(ElevatorStatus.STOPPED))) {
             elevator.setPower(0);
             elevatorStatus = ElevatorStatus.STOPPED;
         }
 
         // sampler
-        if ((p1.x.isDown() || p2.x.isDown())) {
+        if ((gamepad1.x || gamepad2.x)) {
             this.sampler.setPower(1);
         }
         else {
@@ -145,6 +158,7 @@ public class Basic extends OpMode {
         }
 
         telemetry.addData("Elevator", elevatorStatus.toString());
+        telemetry.addData("IsG1Primary", accessControl.isG1Primary());
         p1.update();
     }
 }

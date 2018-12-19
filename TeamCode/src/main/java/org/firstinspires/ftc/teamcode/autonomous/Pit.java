@@ -268,7 +268,6 @@ public class Pit extends LinearOpMode {
                     this.grabber.setPower(0);
                     step++;
                 }
-                */
                 telemetry.update();
             }
         }

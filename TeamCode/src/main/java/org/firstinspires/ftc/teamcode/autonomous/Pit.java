@@ -226,6 +226,7 @@ public class Pit extends LinearOpMode {
                     continue;
                 }
 
+                // move towards the rail
                 if (step == 3) {
                     Lowering.raiseRobot(this, elevator);
                     this.mecanumDrive.stopMoving();
@@ -235,6 +236,65 @@ public class Pit extends LinearOpMode {
                     step++;
                 }
 
+                // move back to midway point between pit and landing site
+                if (step == 4) {
+                    this.mecanumDrive.autoMove(this, hardwareMap, this.mecanumDrive, MecanumDrive.Direction.RIGHT, 30);
+                    step++;
+                }
+
+                // rotate left towards the other site
+                if (step == 5) {
+                    switch (goldPosition) {
+                        case LEFT:
+                            this.mecanumDrive.complexDrive(0, 0, 0.3);
+                            sleep(TimeOffsetVoltage.calculateDistance((hardwareMap.voltageSensor.get("Expansion Hub 10").getVoltage()), 31));
+                            this.mecanumDrive.stopMoving();
+                            step++;
+                            break;
+                        case CENTER:
+                            this.mecanumDrive.complexDrive(0, 0, 0.3);
+                            sleep(TimeOffsetVoltage.calculateDistance((hardwareMap.voltageSensor.get("Expansion Hub 10").getVoltage()), 31));
+                            this.mecanumDrive.stopMoving();
+                            step++;
+                            break;
+                        case RIGHT:
+                            this.mecanumDrive.complexDrive(0, 0, 0.3);
+                            sleep(TimeOffsetVoltage.calculateDistance((hardwareMap.voltageSensor.get("Expansion Hub 10").getVoltage()), 31));
+                            this.mecanumDrive.stopMoving();
+                            step++;
+                            break;
+                    }
+                }
+
+                // make first leg of the trip to depot
+                if (step == 6) {
+                    this.mecanumDrive.autoMove(this, hardwareMap, mecanumDrive, MecanumDrive.Direction.UP, 50);
+                    step++;
+                }
+
+                // rotate a little left
+                if (step == 7) {
+                    this.mecanumDrive.complexDrive(0, 0, 0.3);
+                    sleep(TimeOffsetVoltage.calculateDistance((hardwareMap.voltageSensor.get("Expansion Hub 10").getVoltage()), 31));
+                    this.mecanumDrive.stopMoving();
+                    step++;
+                }
+
+                // move forward
+                if (step == 8) {
+                    this.mecanumDrive.autoMove(this, hardwareMap, mecanumDrive, MecanumDrive.Direction.UP, 50);
+                    step++;
+                }
+
+                // drop game element
+                if (step == 9) {
+                    dumper.setDirection(DcMotorSimple.Direction.REVERSE);
+                    dumper.setPower(1);
+                    this.sleep(1200);
+                    dumper.setPower(0);
+                }
+
+                /**
                 // rotate towards the rail
                 if (step == 4) {
                     switch (goldPosition) {
@@ -268,6 +328,8 @@ public class Pit extends LinearOpMode {
                     this.grabber.setPower(0);
                     step++;
                 }
+                 */
+
                 telemetry.update();
             }
         }

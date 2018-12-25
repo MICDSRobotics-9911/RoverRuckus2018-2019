@@ -264,7 +264,7 @@ public class Depot extends LinearOpMode {
                     }
                 }
 
-                // drop the arm into the pit
+                // drop the team marker into the pit
                 if (step == 5) {
                     if (goldPosition.equals(GoldPosition.CENTER)) {
                         this.mecanumDrive.complexDrive(MecanumDrive.Direction.LEFT.angle(), 1, 0);

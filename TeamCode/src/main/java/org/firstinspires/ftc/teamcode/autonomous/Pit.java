@@ -128,10 +128,10 @@ public class Pit extends LinearOpMode {
                 this.mecanumDrive.stopMoving();
                 Lowering.raiseRobot(this, elevator);
                 this.mecanumDrive.complexDrive(MecanumDrive.Direction.DOWN.angle(), 0.5, 0);
-                sleep(TimeOffsetVoltage.calculateDistance((hardwareMap.voltageSensor.get("Expansion Hub 10").getVoltage()), 14));
+                sleep(TimeOffsetVoltage.calculateDistance((hardwareMap.voltageSensor.get("Expansion Hub 10").getVoltage()), 19));
                 this.mecanumDrive.stopMoving();
                 this.mecanumDrive.complexDrive(MecanumDrive.Direction.LEFT.angle(), 0.5, 0);
-                sleep(TimeOffsetVoltage.calculateDistance((hardwareMap.voltageSensor.get("Expansion Hub 10").getVoltage()), 12));
+                sleep(TimeOffsetVoltage.calculateDistance((hardwareMap.voltageSensor.get("Expansion Hub 10").getVoltage()), 12)); // 12
                 this.mecanumDrive.stopMoving();
                 step++;
             }
@@ -212,11 +212,6 @@ public class Pit extends LinearOpMode {
 
                 // rotate towards the correct element
                 if (!goldPosition.equals(goldPosition.UNKNOWN) && step == 2) {
-                    // rotate 90
-                    this.mecanumDrive.complexDrive(0, 0, 0.3);
-                    sleep(TimeOffsetVoltage.calculateDistance((hardwareMap.voltageSensor.get("Expansion Hub 10").getVoltage()), 55)); // 31
-                    this.mecanumDrive.stopMoving();
-
                     switch (goldPosition) {
                         case LEFT:
                             this.mecanumDrive.complexDrive(0, 0, 0.3);
@@ -253,7 +248,7 @@ public class Pit extends LinearOpMode {
                             break;
                         case CENTER:
                             this.mecanumDrive.complexDrive(MecanumDrive.Direction.LEFT.angle(), 1, 0);
-                            sleep(TimeOffsetVoltage.calculateDistance((hardwareMap.voltageSensor.get("Expansion Hub 10").getVoltage()), 45));
+                            sleep(TimeOffsetVoltage.calculateDistance((hardwareMap.voltageSensor.get("Expansion Hub 10").getVoltage()), 49));
                             this.mecanumDrive.stopMoving();
                             break;
                         case RIGHT:
@@ -303,11 +298,11 @@ public class Pit extends LinearOpMode {
                             step++;
                             break;
                         case CENTER:
-                            this.mecanumDrive.autoMove(this, hardwareMap, mecanumDrive, MecanumDrive.Direction.DOWN, 55);
+                            this.mecanumDrive.autoMove(this, hardwareMap, mecanumDrive, MecanumDrive.Direction.DOWN, 58);
                             step++;
                             break;
                         case RIGHT:
-                            this.mecanumDrive.autoMove(this, hardwareMap, mecanumDrive, MecanumDrive.Direction.DOWN, 67);
+                            this.mecanumDrive.autoMove(this, hardwareMap, mecanumDrive, MecanumDrive.Direction.DOWN, 57);
                             step++;
                             break;
                     }
@@ -323,7 +318,7 @@ public class Pit extends LinearOpMode {
 
                 // move forward
                 if (step == 8) {
-                    this.mecanumDrive.autoMove(this, hardwareMap, mecanumDrive, MecanumDrive.Direction.DOWN, 47);
+                    this.mecanumDrive.autoMove(this, hardwareMap, mecanumDrive, MecanumDrive.Direction.DOWN, 35);
                     step++;
                 }
 
@@ -338,7 +333,7 @@ public class Pit extends LinearOpMode {
 
                 // move towards pit for drop
                 if (step == 10) {
-                    this.mecanumDrive.autoMove(this, hardwareMap, mecanumDrive, MecanumDrive.Direction.UP, 65);
+                    this.mecanumDrive.autoMove(this, hardwareMap, mecanumDrive, MecanumDrive.Direction.UP, 52);
                     step++;
                 }
 

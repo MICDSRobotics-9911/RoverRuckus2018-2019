@@ -210,7 +210,7 @@ public class Depot extends LinearOpMode {
                     switch (goldPosition) {
                         case LEFT:
                             this.mecanumDrive.complexDrive(0, 0, 0.3);
-                            sleep(TimeOffsetVoltage.calculateDistance((hardwareMap.voltageSensor.get("Expansion Hub 10").getVoltage()), 31));
+                            sleep(TimeOffsetVoltage.calculateDistance((hardwareMap.voltageSensor.get("Expansion Hub 10").getVoltage()), 37)); // 31
                             this.mecanumDrive.stopMoving();
                             step++;
                             break;
@@ -219,7 +219,7 @@ public class Depot extends LinearOpMode {
                             break;
                         case RIGHT:
                             this.mecanumDrive.complexDrive(0, 0, -0.3);
-                            sleep(TimeOffsetVoltage.calculateDistance((hardwareMap.voltageSensor.get("Expansion Hub 10").getVoltage()), 31));
+                            sleep(TimeOffsetVoltage.calculateDistance((hardwareMap.voltageSensor.get("Expansion Hub 10").getVoltage()), 34));
                             this.mecanumDrive.stopMoving();
                             step++;
                             break;
@@ -264,7 +264,7 @@ public class Depot extends LinearOpMode {
                     }
                 }
 
-                // drop the arm into the pit
+                // drop the team marker into the pit
                 if (step == 5) {
                     if (goldPosition.equals(GoldPosition.CENTER)) {
                         this.mecanumDrive.complexDrive(MecanumDrive.Direction.LEFT.angle(), 1, 0);
@@ -274,6 +274,7 @@ public class Depot extends LinearOpMode {
                         dumper.setPower(1);
                         this.sleep(1200);
                         dumper.setPower(0);
+                        step++;
                     }
                     else {
                         this.mecanumDrive.complexDrive(MecanumDrive.Direction.LEFT.angle(), 1, 0);
@@ -283,8 +284,17 @@ public class Depot extends LinearOpMode {
                         dumper.setPower(1);
                         this.sleep(1200);
                         dumper.setPower(0);
+                        step++;
                     }
                 }
+
+                if (step == 6) {
+                    this.mecanumDrive.complexDrive(0, 0, -0.3);
+                    sleep(TimeOffsetVoltage.calculateDistance((hardwareMap.voltageSensor.get("Expansion Hub 10").getVoltage()), 39));
+                    this.mecanumDrive.stopMoving();
+                    step++;
+                }
+
                 telemetry.update();
             }
         }

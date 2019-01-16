@@ -346,45 +346,10 @@ public class Pit extends LinearOpMode {
                     step++;
                 }
 
+                // start sampling just on the off-chance we can pull in silver or gold
                 if (step == 12) {
                     this.sampler.setPower(1);
                 }
-
-                /**
-                // rotate towards the rail
-                if (step == 4) {
-                    switch (goldPosition) {
-                        case LEFT:
-                            this.mecanumDrive.complexDrive(0, 0, -0.3);
-                            sleep(TimeOffsetVoltage.calculateDistance((hardwareMap.voltageSensor.get("Expansion Hub 10").getVoltage()), 48));
-                            this.mecanumDrive.stopMoving();
-                            step++;
-                            break;
-                        case CENTER:
-                            this.mecanumDrive.complexDrive(MecanumDrive.Direction.LEFT.angle(), 1, 0);
-                            sleep(TimeOffsetVoltage.calculateDistance((hardwareMap.voltageSensor.get("Expansion Hub 10").getVoltage()), 30));
-                            this.mecanumDrive.stopMoving();
-                            step++;
-                            break;
-                        case RIGHT:
-                            this.mecanumDrive.complexDrive(0, 0, 0.3);
-                            sleep(TimeOffsetVoltage.calculateDistance((hardwareMap.voltageSensor.get("Expansion Hub 10").getVoltage()), 48));
-                            this.mecanumDrive.stopMoving();
-                            step++;
-                            break;
-                    }
-                }
-
-                if (step == 5) {
-                    this.mecanumDrive.complexDrive(0, 0, 0.3);
-                    sleep(TimeOffsetVoltage.calculateDistance((hardwareMap.voltageSensor.get("Expansion Hub 10").getVoltage()), 55));
-                    this.mecanumDrive.stopMoving();
-                    this.grabber.setPower(1);
-                    sleep(6000);
-                    this.grabber.setPower(0);
-                    step++;
-                }
-                 */
 
                 telemetry.addData("Step", step);
                 telemetry.update();

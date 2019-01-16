@@ -131,8 +131,10 @@ public class Depot extends LinearOpMode {
             /** Activate Tensor Flow Object Detection. */
             if (tfod != null) {
                 tfod.activate();
+                sleep(1000);
             }
 
+            // let the robot figure out where gold is
             while (opModeIsActive()) {
                 telemetry.addData("Angle", imuWrapper.getOrientation().toAngleUnit(AngleUnit.RADIANS).firstAngle);
                 // detect the elements

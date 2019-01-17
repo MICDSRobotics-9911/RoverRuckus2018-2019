@@ -33,9 +33,11 @@ import android.media.MediaPlayer;
 
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
+import com.qualcomm.robotcore.hardware.AnalogInput;
 import com.qualcomm.robotcore.hardware.CRServo;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
+import com.qualcomm.robotcore.hardware.DigitalChannel;
 
 import org.firstinspires.ftc.robotcore.external.ClassFactory;
 import org.firstinspires.ftc.robotcore.external.navigation.VuforiaLocalizer;
@@ -67,6 +69,7 @@ public class Pit extends LinearOpMode {
     private DcMotor grabber;
     private DcMotor elevator;
     private IMUWrapper imuWrapper;
+    private DigitalChannel limitswitch;
     private CRServo dumper;
     private CRServo sampler;
     private GoldPosition goldPosition = GoldPosition.UNKNOWN;
@@ -114,6 +117,7 @@ public class Pit extends LinearOpMode {
         player = MediaPlayer.create(hardwareMap.appContext, R.raw.sickomode);
         player.setVolume(100, 100);
 
+        limitswitch.setMode(DigitalChannel.Mode.INPUT);
         this.elevator.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         this.dumper.setDirection(DcMotorSimple.Direction.REVERSE);
         this.sampler.setDirection(DcMotorSimple.Direction.REVERSE);
@@ -303,7 +307,7 @@ public class Pit extends LinearOpMode {
                             step++;
                             break;
                         case RIGHT:
-                            this.mecanumDrive.autoMove(this, hardwareMap, mecanumDrive, MecanumDrive.Direction.DOWN, 57);
+                            this.mecanumDrive.autoMove(this, hardwareMap, mecanumDrive, MecanumDrive.Direction.DOWN, 56);
                             step++;
                             break;
                     }

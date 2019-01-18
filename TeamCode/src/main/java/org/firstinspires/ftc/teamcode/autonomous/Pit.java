@@ -114,9 +114,11 @@ public class Pit extends LinearOpMode {
         dumper = hardwareMap.get(CRServo.class, "dumper");
         sampler = hardwareMap.get(CRServo.class, "sampler");
         imuWrapper = new IMUWrapper(hardwareMap);
+        limitswitch = hardwareMap.get(DigitalChannel.class, "limit");
         player = MediaPlayer.create(hardwareMap.appContext, R.raw.sickomode);
-        player.setVolume(100, 100);
 
+
+        player.setVolume(100, 100);
         limitswitch.setMode(DigitalChannel.Mode.INPUT);
         this.elevator.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         this.dumper.setDirection(DcMotorSimple.Direction.REVERSE);
@@ -276,7 +278,7 @@ public class Pit extends LinearOpMode {
                     switch (goldPosition) {
                         case LEFT:
                             this.mecanumDrive.complexDrive(0, 0, -0.3);
-                            sleep(TimeOffsetVoltage.calculateDistance((hardwareMap.voltageSensor.get("Expansion Hub 10").getVoltage()), 33));
+                            sleep(TimeOffsetVoltage.calculateDistance((hardwareMap.voltageSensor.get("Expansion Hub 10").getVoltage()), 33)); // this distance needs to adjusted
                             this.mecanumDrive.stopMoving();
                             step++;
                             break;
@@ -297,7 +299,7 @@ public class Pit extends LinearOpMode {
 
                 // make first leg of the trip to depot
                 if (step == 6) {
-                    switch (goldPosition) {
+                    /*switch (goldPosition) {
                         case LEFT:
                             this.mecanumDrive.autoMove(this, hardwareMap, mecanumDrive, MecanumDrive.Direction.DOWN, 44);
                             step++;
@@ -310,20 +312,33 @@ public class Pit extends LinearOpMode {
                             this.mecanumDrive.autoMove(this, hardwareMap, mecanumDrive, MecanumDrive.Direction.DOWN, 56);
                             step++;
                             break;
-                    }
-                }
+                    }*/
 
-                // rotate a little left
-                if (step == 7) {
-                    this.mecanumDrive.complexDrive(0, 0, 0.3);
-                    sleep(TimeOffsetVoltage.calculateDistance((hardwareMap.voltageSensor.get("Expansion Hub 10").getVoltage()), 35));
+
+                    this.mecanumDrive.autoMove(this, hardwareMap, mecanumDrive, MecanumDrive.Direction.DOWN, 40);
+                    while (!limitswitch.getState()) {
+                        this.mecanumDrive.complexDrive(MecanumDrive.Direction.DOWN.angle(), 0.25, 0);
+                        sleep(1);
+                    }
+
+                    this.mecanumDrive.stopMoving();
+                    this.mecanumDrive.complexDrive(MecanumDrive.Direction.UP.angle(), 0.5, 0);
+                    sleep(150);
                     this.mecanumDrive.stopMoving();
                     step++;
                 }
 
-                // move forward
+                // rotate towards depot
+                if (step == 7) {
+                    this.mecanumDrive.complexDrive(0, 0, 0.3);
+                    sleep(TimeOffsetVoltage.calculateDistance((hardwareMap.voltageSensor.get("Expansion Hub 10").getVoltage()), 38));
+                    this.mecanumDrive.stopMoving();
+                    step++;
+                }
+
+                // move to depot
                 if (step == 8) {
-                    this.mecanumDrive.autoMove(this, hardwareMap, mecanumDrive, MecanumDrive.Direction.DOWN, 35);
+                    this.mecanumDrive.autoMove(this, hardwareMap, mecanumDrive, MecanumDrive.Direction.DOWN, 37);
                     step++;
                 }
 
@@ -338,7 +353,7 @@ public class Pit extends LinearOpMode {
 
                 // move towards pit for drop
                 if (step == 10) {
-                    this.mecanumDrive.autoMove(this, hardwareMap, mecanumDrive, MecanumDrive.Direction.UP, 52);
+                    this.mecanumDrive.autoMove(this, hardwareMap, mecanumDrive, MecanumDrive.Direction.UP, 56);
                     step++;
                 }
 

@@ -5,6 +5,7 @@ import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.hardware.CRServo;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
+import com.qualcomm.robotcore.hardware.DigitalChannel;
 import com.qualcomm.robotcore.hardware.Servo;
 
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
@@ -23,6 +24,8 @@ public class Test extends LinearOpMode {
     private DcMotor grabber;
     private DcMotor elevator;
     private CRServo dumper;
+    private CRServo sampler;
+    private DigitalChannel limit;
 
     @Override
     public void runOpMode() {
@@ -35,11 +38,26 @@ public class Test extends LinearOpMode {
         grabber = hardwareMap.get(DcMotor.class, "grabber");
         imuWrapper = new IMUWrapper(hardwareMap);
         dumper = hardwareMap.get(CRServo.class, "dumper");
+        limit = hardwareMap.get(DigitalChannel.class, "limit");
+        sampler = hardwareMap.get(CRServo.class, "sampler");
         //imuWrapper.getIMU().initialize(imuWrapper.getInitilizationParameters());
 
         // settings
         this.elevator.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        this.sampler.setDirection(DcMotorSimple.Direction.REVERSE);
+        limit.setMode(DigitalChannel.Mode.INPUT);
 
         waitForStart();
+
+        while (opModeIsActive()) {
+            while (limit.getState() == false) {
+                sampler.setPower(1);
+            }
+
+            sampler.setPower(0);
+
+            telemetry.addData("Limit State", limit.getState());
+            telemetry.update();
+        }
     }
 }

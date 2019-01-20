@@ -67,7 +67,6 @@ public class Depot extends LinearOpMode {
 
     private DcMotor grabber;
     private DcMotor elevator;
-    private IMUWrapper imuWrapper;
     private CRServo dumper;
     private GoldPosition goldPosition = GoldPosition.UNKNOWN;
     private int step = 0;
@@ -107,7 +106,6 @@ public class Depot extends LinearOpMode {
         mecanumDrive = (MecanumDrive) robot.getDrivetrain();
         grabber = hardwareMap.get(DcMotor.class, "grabber");
         dumper = hardwareMap.get(CRServo.class, "dumper");
-        imuWrapper = new IMUWrapper(hardwareMap);
 
         this.elevator.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         waitForStart();
@@ -136,7 +134,6 @@ public class Depot extends LinearOpMode {
 
             // let the robot figure out where gold is
             while (opModeIsActive()) {
-                telemetry.addData("Angle", imuWrapper.getOrientation().toAngleUnit(AngleUnit.RADIANS).firstAngle);
                 // detect the elements
                 if (tfod != null && step == 1) {
                     // getUpdatedRecognitions() will return null if no new information is available since

@@ -68,7 +68,6 @@ public class Pit extends LinearOpMode {
 
     private DcMotor grabber;
     private DcMotor elevator;
-    private IMUWrapper imuWrapper;
     private DigitalChannel limitswitch;
     private CRServo dumper;
     private CRServo sampler;
@@ -113,7 +112,6 @@ public class Pit extends LinearOpMode {
         grabber = hardwareMap.get(DcMotor.class, "grabber");
         dumper = hardwareMap.get(CRServo.class, "dumper");
         sampler = hardwareMap.get(CRServo.class, "sampler");
-        imuWrapper = new IMUWrapper(hardwareMap);
         limitswitch = hardwareMap.get(DigitalChannel.class, "limit");
         player = MediaPlayer.create(hardwareMap.appContext, R.raw.sickomode);
 

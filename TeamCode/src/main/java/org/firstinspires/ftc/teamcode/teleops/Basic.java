@@ -31,7 +31,6 @@ public class Basic extends OpMode {
     private boolean samplerOn;
     private CRServo dumper;
     private CRServo sampler;
-    private IMUWrapper imuWrapper;
     private ElevatorStatus elevatorStatus = ElevatorStatus.STOPPED;
 
     private Controller p1;
@@ -51,7 +50,6 @@ public class Basic extends OpMode {
         grabber = hardwareMap.get(DcMotor.class, "grabber");
         dumper = hardwareMap.get(CRServo.class, "dumper");
         sampler = hardwareMap.get(CRServo.class, "sampler");
-        imuWrapper = new IMUWrapper(hardwareMap);
         accessControl = new AccessControl();
         extender = hardwareMap.get(DcMotor.class, "extender");
         samplerOn = false;
@@ -64,7 +62,6 @@ public class Basic extends OpMode {
 
     public void loop() {
         telemetry.addData("Grabber Positiion", grabber.getCurrentPosition());
-        telemetry.addData("Angle", imuWrapper.getOrientation().toAngleUnit(AngleUnit.RADIANS).firstAngle);
         telemetry.addData("Half-Speed", halfSpeed);
 
         // change control of mecanum drive

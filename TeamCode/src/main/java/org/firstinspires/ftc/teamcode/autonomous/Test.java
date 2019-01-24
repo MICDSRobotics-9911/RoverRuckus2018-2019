@@ -49,15 +49,9 @@ public class Test extends LinearOpMode {
 
         waitForStart();
 
-        while (opModeIsActive()) {
-            while (limit.getState() == false) {
-                sampler.setPower(1);
-            }
-
-            sampler.setPower(0);
-
-            telemetry.addData("Limit State", limit.getState());
-            telemetry.update();
-        }
+        // weird rotation
+        this.mecanumDrive.complexDrive(0, 0, -0.3);
+        sleep(TimeOffsetVoltage.calculateDistance((hardwareMap.voltageSensor.get("Expansion Hub 10").getVoltage()), 100));
+        this.mecanumDrive.stopMoving();
     }
 }

@@ -238,7 +238,7 @@ public class Depot2 extends LinearOpMode {
                     continue;
                 }
 
-                // move towards the rail
+                // move towards the element
                 if (step == 3) {
                     Lowering.raiseRobot(this, elevator);
                     this.mecanumDrive.stopMoving();
@@ -246,7 +246,7 @@ public class Depot2 extends LinearOpMode {
                     switch (goldPosition) {
                         case LEFT:
                             this.mecanumDrive.complexDrive(MecanumDrive.Direction.LEFT.angle(), 1, 0);
-                            sleep(TimeOffsetVoltage.calculateDistance((hardwareMap.voltageSensor.get("Expansion Hub 10").getVoltage()), 55));
+                            sleep(TimeOffsetVoltage.calculateDistance((hardwareMap.voltageSensor.get("Expansion Hub 10").getVoltage()), 58));
                             this.mecanumDrive.stopMoving();
                             break;
                         case CENTER:
@@ -256,7 +256,7 @@ public class Depot2 extends LinearOpMode {
                             break;
                         case RIGHT:
                             this.mecanumDrive.complexDrive(MecanumDrive.Direction.LEFT.angle(), 1, 0);
-                            sleep(TimeOffsetVoltage.calculateDistance((hardwareMap.voltageSensor.get("Expansion Hub 10").getVoltage()), 55));
+                            sleep(TimeOffsetVoltage.calculateDistance((hardwareMap.voltageSensor.get("Expansion Hub 10").getVoltage()), 60));
                             this.mecanumDrive.stopMoving();
                             break;
                     }
@@ -274,7 +274,7 @@ public class Depot2 extends LinearOpMode {
                     switch (goldPosition) {
                         case LEFT:
                             this.mecanumDrive.complexDrive(0, 0, -0.3);
-                            sleep(TimeOffsetVoltage.calculateDistance((hardwareMap.voltageSensor.get("Expansion Hub 10").getVoltage()), 30)); // this distance needs to adjusted
+                            sleep(TimeOffsetVoltage.calculateDistance((hardwareMap.voltageSensor.get("Expansion Hub 10").getVoltage()), 40)); // this distance needs to adjusted
                             this.mecanumDrive.stopMoving();
                             step++;
                             break;
@@ -295,24 +295,8 @@ public class Depot2 extends LinearOpMode {
 
                 // make first leg of the trip to depot
                 if (step == 6) {
-                    /*switch (goldPosition) {
-                        case LEFT:
-                            this.mecanumDrive.autoMove(this, hardwareMap, mecanumDrive, MecanumDrive.Direction.DOWN, 44);
-                            step++;
-                            break;
-                        case CENTER:
-                            this.mecanumDrive.autoMove(this, hardwareMap, mecanumDrive, MecanumDrive.Direction.DOWN, 58);
-                            step++;
-                            break;
-                        case RIGHT:
-                            this.mecanumDrive.autoMove(this, hardwareMap, mecanumDrive, MecanumDrive.Direction.DOWN, 56);
-                            step++;
-                            break;
-                    }*/
-
-
-                    this.mecanumDrive.autoMove(this, hardwareMap, mecanumDrive, MecanumDrive.Direction.DOWN, 40);
-                    while (!limitswitch.getState()) {
+                    this.mecanumDrive.autoMove(this, hardwareMap, mecanumDrive, MecanumDrive.Direction.DOWN, 37);
+                    while (limitswitch.getState()) {
                         this.mecanumDrive.complexDrive(MecanumDrive.Direction.DOWN.angle(), 0.25, 0);
                         sleep(1);
                     }
@@ -334,7 +318,7 @@ public class Depot2 extends LinearOpMode {
 
                 // move to depot
                 if (step == 8) {
-                    this.mecanumDrive.autoMove(this, hardwareMap, mecanumDrive, MecanumDrive.Direction.DOWN, 80);
+                    this.mecanumDrive.autoMove(this, hardwareMap, mecanumDrive, MecanumDrive.Direction.DOWN, 60);
                     step++;
                 }
 

@@ -314,7 +314,7 @@ public class Pit extends LinearOpMode {
 
 
                     this.mecanumDrive.autoMove(this, hardwareMap, mecanumDrive, MecanumDrive.Direction.DOWN, 40);
-                    while (!limitswitch.getState()) {
+                    while (limitswitch.getState()) {
                         this.mecanumDrive.complexDrive(MecanumDrive.Direction.DOWN.angle(), 0.25, 0);
                         sleep(1);
                     }

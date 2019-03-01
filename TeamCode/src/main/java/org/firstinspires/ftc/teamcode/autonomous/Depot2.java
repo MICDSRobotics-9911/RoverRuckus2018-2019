@@ -33,7 +33,6 @@ import android.media.MediaPlayer;
 
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
-import com.qualcomm.robotcore.hardware.AnalogInput;
 import com.qualcomm.robotcore.hardware.CRServo;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
@@ -48,7 +47,6 @@ import org.firstinspires.ftc.teamcode.R;
 import org.firstinspires.ftc.teamcode.data.ElementParser;
 import org.firstinspires.ftc.teamcode.data.GoldPosition;
 import org.firstinspires.ftc.teamcode.robotplus.autonomous.TimeOffsetVoltage;
-import org.firstinspires.ftc.teamcode.robotplus.hardware.IMUWrapper;
 import org.firstinspires.ftc.teamcode.robotplus.hardware.MecanumDrive;
 import org.firstinspires.ftc.teamcode.robotplus.hardware.Robot;
 
@@ -57,8 +55,8 @@ import java.util.List;
 /**
  * Pit is designed to hit the gold and stop
  */
-@Autonomous(name = "Pit", group = "Concept")
-public class Pit extends LinearOpMode {
+@Autonomous(name = "Depot2", group = "Concept")
+public class Depot2 extends LinearOpMode {
     private static final String TFOD_MODEL_ASSET = "RoverRuckus.tflite";
     private static final String LABEL_GOLD_MINERAL = "Gold Mineral";
     private static final String LABEL_SILVER_MINERAL = "Silver Mineral";
@@ -130,7 +128,7 @@ public class Pit extends LinearOpMode {
                 this.mecanumDrive.complexDrive(MecanumDrive.Direction.UP.angle(), 0.5, 0);
                 sleep(TimeOffsetVoltage.calculateDistance((hardwareMap.voltageSensor.get("Expansion Hub 10").getVoltage()), 19));
                 this.mecanumDrive.stopMoving();
-                Lowering.partialRaise(this, elevator);
+                Lowering.raiseRobot(this, elevator);
                 this.mecanumDrive.complexDrive(MecanumDrive.Direction.DOWN.angle(), 0.5, 0);
                 sleep(TimeOffsetVoltage.calculateDistance((hardwareMap.voltageSensor.get("Expansion Hub 10").getVoltage()), 19));
                 this.mecanumDrive.stopMoving();
@@ -180,7 +178,8 @@ public class Pit extends LinearOpMode {
                                     step++;
                                 }
                             }
-                        } else if (updatedRecognitions.size() >= 3) {
+                        }
+                        else if (updatedRecognitions.size() >= 3) {
                             telemetry.addData("More than three", "true");
                             telemetry.update();
                             updatedRecognitions = ElementParser.parseElements(updatedRecognitions);
@@ -235,17 +234,19 @@ public class Pit extends LinearOpMode {
                         default:
                             break;
                     }
+                } else {
+                    continue;
                 }
 
-                // move towards the rail
+                // move towards the element
                 if (step == 3) {
-                    //Lowering.raiseRobot(this, elevator);
+                    Lowering.raiseRobot(this, elevator);
                     this.mecanumDrive.stopMoving();
 
                     switch (goldPosition) {
                         case LEFT:
                             this.mecanumDrive.complexDrive(MecanumDrive.Direction.LEFT.angle(), 1, 0);
-                            sleep(TimeOffsetVoltage.calculateDistance((hardwareMap.voltageSensor.get("Expansion Hub 10").getVoltage()), 55));
+                            sleep(TimeOffsetVoltage.calculateDistance((hardwareMap.voltageSensor.get("Expansion Hub 10").getVoltage()), 58));
                             this.mecanumDrive.stopMoving();
                             break;
                         case CENTER:
@@ -255,7 +256,7 @@ public class Pit extends LinearOpMode {
                             break;
                         case RIGHT:
                             this.mecanumDrive.complexDrive(MecanumDrive.Direction.LEFT.angle(), 1, 0);
-                            sleep(TimeOffsetVoltage.calculateDistance((hardwareMap.voltageSensor.get("Expansion Hub 10").getVoltage()), 55));
+                            sleep(TimeOffsetVoltage.calculateDistance((hardwareMap.voltageSensor.get("Expansion Hub 10").getVoltage()), 60));
                             this.mecanumDrive.stopMoving();
                             break;
                     }
@@ -264,7 +265,7 @@ public class Pit extends LinearOpMode {
 
                 // move back to midway point between pit and landing site
                 if (step == 4) {
-                    this.mecanumDrive.autoMove(this, hardwareMap, this.mecanumDrive, MecanumDrive.Direction.RIGHT, 29);
+                    this.mecanumDrive.autoMove(this, hardwareMap, this.mecanumDrive, MecanumDrive.Direction.RIGHT, 27); // 29
                     step++;
                 }
 
@@ -273,7 +274,7 @@ public class Pit extends LinearOpMode {
                     switch (goldPosition) {
                         case LEFT:
                             this.mecanumDrive.complexDrive(0, 0, -0.3);
-                            sleep(TimeOffsetVoltage.calculateDistance((hardwareMap.voltageSensor.get("Expansion Hub 10").getVoltage()), 33)); // this distance needs to adjusted
+                            sleep(TimeOffsetVoltage.calculateDistance((hardwareMap.voltageSensor.get("Expansion Hub 10").getVoltage()), 40)); // this distance needs to adjusted
                             this.mecanumDrive.stopMoving();
                             step++;
                             break;
@@ -294,46 +295,30 @@ public class Pit extends LinearOpMode {
 
                 // make first leg of the trip to depot
                 if (step == 6) {
-                    /*switch (goldPosition) {
-                        case LEFT:
-                            this.mecanumDrive.autoMove(this, hardwareMap, mecanumDrive, MecanumDrive.Direction.DOWN, 44);
-                            step++;
-                            break;
-                        case CENTER:
-                            this.mecanumDrive.autoMove(this, hardwareMap, mecanumDrive, MecanumDrive.Direction.DOWN, 58);
-                            step++;
-                            break;
-                        case RIGHT:
-                            this.mecanumDrive.autoMove(this, hardwareMap, mecanumDrive, MecanumDrive.Direction.DOWN, 56);
-                            step++;
-                            break;
-                    }*/
-
-
-                    this.mecanumDrive.autoMove(this, hardwareMap, mecanumDrive, MecanumDrive.Direction.DOWN, 40);
-                    while (!limitswitch.getState()) {
+                    this.mecanumDrive.autoMove(this, hardwareMap, mecanumDrive, MecanumDrive.Direction.DOWN, 37);
+                    while (limitswitch.getState()) {
                         this.mecanumDrive.complexDrive(MecanumDrive.Direction.DOWN.angle(), 0.25, 0);
                         sleep(1);
                     }
 
                     this.mecanumDrive.stopMoving();
                     this.mecanumDrive.complexDrive(MecanumDrive.Direction.UP.angle(), 0.5, 0);
-                    sleep(150);
+                    sleep(300);
                     this.mecanumDrive.stopMoving();
                     step++;
                 }
 
-                // rotate towards depot
+                // rotate front towards pit
                 if (step == 7) {
-                    this.mecanumDrive.complexDrive(0, 0, 0.3);
-                    sleep(TimeOffsetVoltage.calculateDistance((hardwareMap.voltageSensor.get("Expansion Hub 10").getVoltage()), 38));
+                    this.mecanumDrive.complexDrive(0, 0, -0.3);
+                    sleep(TimeOffsetVoltage.calculateDistance((hardwareMap.voltageSensor.get("Expansion Hub 10").getVoltage()), 100));
                     this.mecanumDrive.stopMoving();
                     step++;
                 }
 
                 // move to depot
                 if (step == 8) {
-                    this.mecanumDrive.autoMove(this, hardwareMap, mecanumDrive, MecanumDrive.Direction.DOWN, 37);
+                    this.mecanumDrive.autoMove(this, hardwareMap, mecanumDrive, MecanumDrive.Direction.DOWN, 60);
                     step++;
                 }
 
@@ -363,7 +348,6 @@ public class Pit extends LinearOpMode {
                 // start sampling just on the off-chance we can pull in silver or gold
                 if (step == 12) {
                     this.sampler.setPower(1);
-                    Lowering.raiseRobot(this, this.elevator);
                 }
 
                 telemetry.addData("Step", step);

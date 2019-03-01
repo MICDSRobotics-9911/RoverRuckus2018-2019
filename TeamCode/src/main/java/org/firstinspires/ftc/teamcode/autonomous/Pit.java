@@ -130,7 +130,7 @@ public class Pit extends LinearOpMode {
                 this.mecanumDrive.complexDrive(MecanumDrive.Direction.UP.angle(), 0.5, 0);
                 sleep(TimeOffsetVoltage.calculateDistance((hardwareMap.voltageSensor.get("Expansion Hub 10").getVoltage()), 19));
                 this.mecanumDrive.stopMoving();
-                Lowering.raiseRobot(this, elevator);
+                Lowering.partialRaise(this, elevator);
                 this.mecanumDrive.complexDrive(MecanumDrive.Direction.DOWN.angle(), 0.5, 0);
                 sleep(TimeOffsetVoltage.calculateDistance((hardwareMap.voltageSensor.get("Expansion Hub 10").getVoltage()), 19));
                 this.mecanumDrive.stopMoving();
@@ -180,8 +180,7 @@ public class Pit extends LinearOpMode {
                                     step++;
                                 }
                             }
-                        }
-                        else if (updatedRecognitions.size() >= 3) {
+                        } else if (updatedRecognitions.size() >= 3) {
                             telemetry.addData("More than three", "true");
                             telemetry.update();
                             updatedRecognitions = ElementParser.parseElements(updatedRecognitions);
@@ -236,13 +235,11 @@ public class Pit extends LinearOpMode {
                         default:
                             break;
                     }
-                } else {
-                    continue;
                 }
 
                 // move towards the rail
                 if (step == 3) {
-                    Lowering.raiseRobot(this, elevator);
+                    //Lowering.raiseRobot(this, elevator);
                     this.mecanumDrive.stopMoving();
 
                     switch (goldPosition) {
@@ -314,7 +311,7 @@ public class Pit extends LinearOpMode {
 
 
                     this.mecanumDrive.autoMove(this, hardwareMap, mecanumDrive, MecanumDrive.Direction.DOWN, 40);
-                    while (limitswitch.getState()) {
+                    while (!limitswitch.getState()) {
                         this.mecanumDrive.complexDrive(MecanumDrive.Direction.DOWN.angle(), 0.25, 0);
                         sleep(1);
                     }
@@ -366,6 +363,7 @@ public class Pit extends LinearOpMode {
                 // start sampling just on the off-chance we can pull in silver or gold
                 if (step == 12) {
                     this.sampler.setPower(1);
+                    Lowering.raiseRobot(this, this.elevator);
                 }
 
                 telemetry.addData("Step", step);

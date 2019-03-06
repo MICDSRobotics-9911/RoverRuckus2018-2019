@@ -211,6 +211,10 @@ public class Depot extends LinearOpMode {
                                 }
                             }
                         }
+                        /*else if (updatedRecognitions.size() <= 1 && this.getRuntime() > 5500) {
+                            goldPosition = GoldPosition.CENTER;
+                            step++;
+                        }*/
                         telemetry.update();
                     }
                 }
@@ -312,7 +316,7 @@ public class Depot extends LinearOpMode {
                 // rotate front towards depot
                 if (step == 7) {
                     this.mecanumDrive.complexDrive(0, 0, -0.3);
-                    sleep(TimeOffsetVoltage.calculateDistance((hardwareMap.voltageSensor.get("Expansion Hub 10").getVoltage()), 105)); // 100
+                    sleep(TimeOffsetVoltage.calculateDistance((hardwareMap.voltageSensor.get("Expansion Hub 10").getVoltage()), 100)); // 100
                     this.mecanumDrive.stopMoving();
                     step++;
                 }

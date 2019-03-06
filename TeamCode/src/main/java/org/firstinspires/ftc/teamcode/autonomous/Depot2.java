@@ -66,6 +66,7 @@ public class Depot2 extends LinearOpMode {
 
     private DcMotor grabber;
     private DcMotor elevator;
+    private DcMotor extender;
     private DigitalChannel limitswitch;
     private CRServo dumper;
     private CRServo sampler;
@@ -106,6 +107,7 @@ public class Depot2 extends LinearOpMode {
 
         robot = new Robot(hardwareMap);
         elevator = hardwareMap.get(DcMotor.class, "elevator");
+        extender = hardwareMap.get(DcMotor.class, "extender");
         mecanumDrive = (MecanumDrive) robot.getDrivetrain();
         grabber = hardwareMap.get(DcMotor.class, "grabber");
         dumper = hardwareMap.get(CRServo.class, "dumper");
@@ -128,7 +130,7 @@ public class Depot2 extends LinearOpMode {
                 this.mecanumDrive.complexDrive(MecanumDrive.Direction.UP.angle(), 0.5, 0);
                 sleep(TimeOffsetVoltage.calculateDistance((hardwareMap.voltageSensor.get("Expansion Hub 10").getVoltage()), 19));
                 this.mecanumDrive.stopMoving();
-                Lowering.raiseRobot(this, elevator);
+                Lowering.partialRaise(this, elevator);
                 this.mecanumDrive.complexDrive(MecanumDrive.Direction.DOWN.angle(), 0.5, 0);
                 sleep(TimeOffsetVoltage.calculateDistance((hardwareMap.voltageSensor.get("Expansion Hub 10").getVoltage()), 19));
                 this.mecanumDrive.stopMoving();
@@ -240,7 +242,6 @@ public class Depot2 extends LinearOpMode {
 
                 // move towards the element
                 if (step == 3) {
-                    Lowering.raiseRobot(this, elevator);
                     this.mecanumDrive.stopMoving();
 
                     switch (goldPosition) {
@@ -296,7 +297,7 @@ public class Depot2 extends LinearOpMode {
                 // make first leg of the trip to depot
                 if (step == 6) {
                     this.mecanumDrive.autoMove(this, hardwareMap, mecanumDrive, MecanumDrive.Direction.DOWN, 37);
-                    while (limitswitch.getState()) {
+                    while (!limitswitch.getState()) {
                         this.mecanumDrive.complexDrive(MecanumDrive.Direction.DOWN.angle(), 0.25, 0);
                         sleep(1);
                     }
@@ -308,10 +309,10 @@ public class Depot2 extends LinearOpMode {
                     step++;
                 }
 
-                // rotate front towards pit
+                // rotate front towards depot
                 if (step == 7) {
                     this.mecanumDrive.complexDrive(0, 0, -0.3);
-                    sleep(TimeOffsetVoltage.calculateDistance((hardwareMap.voltageSensor.get("Expansion Hub 10").getVoltage()), 100));
+                    sleep(TimeOffsetVoltage.calculateDistance((hardwareMap.voltageSensor.get("Expansion Hub 10").getVoltage()), 105)); // 100
                     this.mecanumDrive.stopMoving();
                     step++;
                 }
@@ -348,6 +349,10 @@ public class Depot2 extends LinearOpMode {
                 // start sampling just on the off-chance we can pull in silver or gold
                 if (step == 12) {
                     this.sampler.setPower(1);
+                    extender.setPower(1);
+                    sleep(750);
+                    extender.setPower(0);
+                    step++;
                 }
 
                 telemetry.addData("Step", step);

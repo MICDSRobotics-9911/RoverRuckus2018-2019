@@ -310,7 +310,7 @@ public class Pit extends LinearOpMode {
                     }*/
 
 
-                    this.mecanumDrive.autoMove(this, hardwareMap, mecanumDrive, MecanumDrive.Direction.DOWN, 40);
+                    this.mecanumDrive.autoMove(this, hardwareMap, mecanumDrive, MecanumDrive.Direction.DOWN, 41);
                     while (!limitswitch.getState()) {
                         this.mecanumDrive.complexDrive(MecanumDrive.Direction.DOWN.angle(), 0.25, 0);
                         sleep(1);
@@ -326,7 +326,7 @@ public class Pit extends LinearOpMode {
                 // rotate towards depot
                 if (step == 7) {
                     this.mecanumDrive.complexDrive(0, 0, 0.3);
-                    sleep(TimeOffsetVoltage.calculateDistance((hardwareMap.voltageSensor.get("Expansion Hub 10").getVoltage()), 38));
+                    sleep(TimeOffsetVoltage.calculateDistance((hardwareMap.voltageSensor.get("Expansion Hub 10").getVoltage()), 41));
                     this.mecanumDrive.stopMoving();
                     step++;
                 }

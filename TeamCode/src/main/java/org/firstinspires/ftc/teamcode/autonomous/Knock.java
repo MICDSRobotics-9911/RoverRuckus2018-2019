@@ -55,8 +55,8 @@ import java.util.List;
 /**
  * Pit is designed to hit the gold and stop
  */
-@Autonomous(name = "Depot2", group = "Concept")
-public class Depot2 extends LinearOpMode {
+@Autonomous(name = "Knock", group = "Comp")
+public class Knock extends LinearOpMode {
     private static final String TFOD_MODEL_ASSET = "RoverRuckus.tflite";
     private static final String LABEL_GOLD_MINERAL = "Gold Mineral";
     private static final String LABEL_SILVER_MINERAL = "Silver Mineral";
@@ -266,92 +266,23 @@ public class Depot2 extends LinearOpMode {
 
                 // move back to midway point between pit and landing site
                 if (step == 4) {
-                    this.mecanumDrive.autoMove(this, hardwareMap, this.mecanumDrive, MecanumDrive.Direction.RIGHT, 27); // 29
-                    step++;
-                }
-
-                // rotate left towards the other site
-                if (step == 5) {
                     switch (goldPosition) {
                         case LEFT:
-                            this.mecanumDrive.complexDrive(0, 0, -0.3);
-                            sleep(TimeOffsetVoltage.calculateDistance((hardwareMap.voltageSensor.get("Expansion Hub 10").getVoltage()), 40)); // this distance needs to adjusted
+                            this.mecanumDrive.complexDrive(MecanumDrive.Direction.RIGHT.angle(), 1, 0);
+                            sleep(TimeOffsetVoltage.calculateDistance((hardwareMap.voltageSensor.get("Expansion Hub 10").getVoltage()), 58));
                             this.mecanumDrive.stopMoving();
-                            step++;
                             break;
                         case CENTER:
-                            /*this.mecanumDrive.complexDrive(0, 0, 0.3);
-                            sleep(TimeOffsetVoltage.calculateDistance((hardwareMap.voltageSensor.get("Expansion Hub 10").getVoltage()), 31));
-                            this.mecanumDrive.stopMoving();*/
-                            step++;
+                            this.mecanumDrive.complexDrive(MecanumDrive.Direction.RIGHT.angle(), 1, 0);
+                            sleep(TimeOffsetVoltage.calculateDistance((hardwareMap.voltageSensor.get("Expansion Hub 10").getVoltage()), 49));
+                            this.mecanumDrive.stopMoving();
                             break;
                         case RIGHT:
-                            this.mecanumDrive.complexDrive(0, 0, 0.3);
-                            sleep(TimeOffsetVoltage.calculateDistance((hardwareMap.voltageSensor.get("Expansion Hub 10").getVoltage()), 31));
+                            this.mecanumDrive.complexDrive(MecanumDrive.Direction.RIGHT.angle(), 1, 0);
+                            sleep(TimeOffsetVoltage.calculateDistance((hardwareMap.voltageSensor.get("Expansion Hub 10").getVoltage()), 60));
                             this.mecanumDrive.stopMoving();
-                            step++;
                             break;
                     }
-                }
-
-                // make first leg of the trip to depot
-                if (step == 6) {
-                    this.mecanumDrive.autoMove(this, hardwareMap, mecanumDrive, MecanumDrive.Direction.DOWN, 37);
-                    while (!limitswitch.getState()) {
-                        this.mecanumDrive.complexDrive(MecanumDrive.Direction.DOWN.angle(), 0.25, 0);
-                        sleep(1);
-                    }
-
-                    this.mecanumDrive.stopMoving();
-                    this.mecanumDrive.complexDrive(MecanumDrive.Direction.UP.angle(), 0.5, 0);
-                    sleep(300);
-                    this.mecanumDrive.stopMoving();
-                    step++;
-                }
-
-                // rotate front towards depot
-                if (step == 7) {
-                    this.mecanumDrive.complexDrive(0, 0, -0.3);
-                    sleep(TimeOffsetVoltage.calculateDistance((hardwareMap.voltageSensor.get("Expansion Hub 10").getVoltage()), 105)); // 100
-                    this.mecanumDrive.stopMoving();
-                    step++;
-                }
-
-                // move to depot
-                if (step == 8) {
-                    this.mecanumDrive.autoMove(this, hardwareMap, mecanumDrive, MecanumDrive.Direction.DOWN, 60);
-                    step++;
-                }
-
-                // drop game element
-                if (step == 9) {
-                    dumper.setDirection(DcMotorSimple.Direction.REVERSE);
-                    dumper.setPower(1);
-                    this.sleep(1200);
-                    dumper.setPower(0);
-                    step++;
-                }
-
-                // move towards pit for drop
-                if (step == 10) {
-                    this.mecanumDrive.autoMove(this, hardwareMap, mecanumDrive, MecanumDrive.Direction.UP, 56);
-                    step++;
-                }
-
-                // drop arm into the pit
-                if (step == 11) {
-                    this.grabber.setPower(1);
-                    sleep(2500);
-                    this.grabber.setPower(0);
-                    step++;
-                }
-
-                // start sampling just on the off-chance we can pull in silver or gold
-                if (step == 12) {
-                    this.sampler.setPower(1);
-                    extender.setPower(1);
-                    sleep(750);
-                    extender.setPower(0);
                     step++;
                 }
 

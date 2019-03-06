@@ -57,7 +57,7 @@ import java.util.List;
 /**
  * Pit is designed to hit the gold and stop
  */
-@Autonomous(name = "Pit", group = "Concept")
+@Autonomous(name = "Pit", group = "Comp")
 public class Pit extends LinearOpMode {
     private static final String TFOD_MODEL_ASSET = "RoverRuckus.tflite";
     private static final String LABEL_GOLD_MINERAL = "Gold Mineral";

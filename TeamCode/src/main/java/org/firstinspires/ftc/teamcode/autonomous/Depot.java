@@ -29,34 +29,33 @@
 
 package org.firstinspires.ftc.teamcode.autonomous;
 
-import android.util.Log;
+import android.media.MediaPlayer;
 
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.hardware.CRServo;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
-import com.qualcomm.robotcore.hardware.Servo;
-import com.sun.tools.javac.comp.Lower;
+import com.qualcomm.robotcore.hardware.DigitalChannel;
 
 import org.firstinspires.ftc.robotcore.external.ClassFactory;
-import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.VuforiaLocalizer;
 import org.firstinspires.ftc.robotcore.external.navigation.VuforiaLocalizer.CameraDirection;
 import org.firstinspires.ftc.robotcore.external.tfod.Recognition;
 import org.firstinspires.ftc.robotcore.external.tfod.TFObjectDetector;
+import org.firstinspires.ftc.teamcode.R;
+import org.firstinspires.ftc.teamcode.data.ElementParser;
 import org.firstinspires.ftc.teamcode.data.GoldPosition;
 import org.firstinspires.ftc.teamcode.robotplus.autonomous.TimeOffsetVoltage;
-import org.firstinspires.ftc.teamcode.robotplus.hardware.IMUWrapper;
 import org.firstinspires.ftc.teamcode.robotplus.hardware.MecanumDrive;
 import org.firstinspires.ftc.teamcode.robotplus.hardware.Robot;
 
 import java.util.List;
 
 /**
- * Depot will knock the gold, park in the square, and drop the team marker. This isn't the one that lowers the arm into the pit
+ * Pit is designed to hit the gold and stop
  */
-@Autonomous(name = "Depot", group = "Concept")
+@Autonomous(name = "Full Depot", group = "Comp")
 public class Depot extends LinearOpMode {
     private static final String TFOD_MODEL_ASSET = "RoverRuckus.tflite";
     private static final String LABEL_GOLD_MINERAL = "Gold Mineral";
@@ -67,9 +66,14 @@ public class Depot extends LinearOpMode {
 
     private DcMotor grabber;
     private DcMotor elevator;
+    private DcMotor extender;
+    private DigitalChannel limitswitch;
     private CRServo dumper;
+    private CRServo sampler;
     private GoldPosition goldPosition = GoldPosition.UNKNOWN;
     private int step = 0;
+
+    private MediaPlayer player;
 
     private static final String VUFORIA_KEY = "AZDepIf/////AAAAGfXxylZkt0YriAZz29imD+JnpWB4sxwIldmqfmE2S0NQ5QJ+R8FF9kqvBAeUoFLVcXawrLuNS1salfES/URf32WEkCus6PRLYzToyuvGnoBHtXJBW9nr94CSnAFvWjPrYVMEQhy7kZeuMEkhvUn8O/4DZ7f8vP1hPC7xKugpmGY0LTvxd/umhQxy9dl28mkUQWHcselYnHrOgrW4XvNq5exF67YoK3cQDjrodu02wmmFcoeHr78xyabZqOif8hk9Lk+F/idAMZcB1un86Goawbto6qTP7/SnXAbAedRrSKCGp/UuYa02c2Y5rteZMMtdSE7iL824A4kmwVZtg5biQy3jE0zAjsFQD7tztRiMGLxt";
 
@@ -103,25 +107,35 @@ public class Depot extends LinearOpMode {
 
         robot = new Robot(hardwareMap);
         elevator = hardwareMap.get(DcMotor.class, "elevator");
+        extender = hardwareMap.get(DcMotor.class, "extender");
         mecanumDrive = (MecanumDrive) robot.getDrivetrain();
         grabber = hardwareMap.get(DcMotor.class, "grabber");
         dumper = hardwareMap.get(CRServo.class, "dumper");
+        sampler = hardwareMap.get(CRServo.class, "sampler");
+        limitswitch = hardwareMap.get(DigitalChannel.class, "limit");
+        player = MediaPlayer.create(hardwareMap.appContext, R.raw.sickomode);
 
+
+        player.setVolume(100, 100);
+        limitswitch.setMode(DigitalChannel.Mode.INPUT);
         this.elevator.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        this.dumper.setDirection(DcMotorSimple.Direction.REVERSE);
+        this.sampler.setDirection(DcMotorSimple.Direction.REVERSE);
+        // this.player.start();
         waitForStart();
 
         if (opModeIsActive()) {
-            // lower the robot, close elevator, and move back
             if (step == 0) {
                 Lowering.lowerRobot(this, this.elevator);
                 this.mecanumDrive.complexDrive(MecanumDrive.Direction.UP.angle(), 0.5, 0);
                 sleep(TimeOffsetVoltage.calculateDistance((hardwareMap.voltageSensor.get("Expansion Hub 10").getVoltage()), 19));
-                //sleep(250);
                 this.mecanumDrive.stopMoving();
-                Lowering.raiseRobot(this, elevator);
+                Lowering.partialRaise(this, elevator);
                 this.mecanumDrive.complexDrive(MecanumDrive.Direction.DOWN.angle(), 0.5, 0);
-                sleep(TimeOffsetVoltage.calculateDistance((hardwareMap.voltageSensor.get("Expansion Hub 10").getVoltage()), 14));
-                //sleep(250);
+                sleep(TimeOffsetVoltage.calculateDistance((hardwareMap.voltageSensor.get("Expansion Hub 10").getVoltage()), 19));
+                this.mecanumDrive.stopMoving();
+                this.mecanumDrive.complexDrive(MecanumDrive.Direction.LEFT.angle(), 0.5, 0);
+                sleep(TimeOffsetVoltage.calculateDistance((hardwareMap.voltageSensor.get("Expansion Hub 10").getVoltage()), 18)); // 12
                 this.mecanumDrive.stopMoving();
                 step++;
             }
@@ -129,18 +143,17 @@ public class Depot extends LinearOpMode {
             /** Activate Tensor Flow Object Detection. */
             if (tfod != null) {
                 tfod.activate();
-                sleep(1000);
+                sleep(2000);
             }
 
-            // let the robot figure out where gold is
             while (opModeIsActive()) {
-                // detect the elements
                 if (tfod != null && step == 1) {
                     // getUpdatedRecognitions() will return null if no new information is available since
                     // the last time that call was made.
                     List<Recognition> updatedRecognitions = tfod.getUpdatedRecognitions();
                     if (updatedRecognitions != null) {
                         telemetry.addData("# Object Detected", updatedRecognitions.size());
+                        telemetry.update();
                         if (updatedRecognitions.size() == 2) {
                             int goldMineralX = -1;
                             int silverMineral1X = -1;
@@ -168,34 +181,32 @@ public class Depot extends LinearOpMode {
                                 }
                             }
                         }
-                        else if (updatedRecognitions.size() == 3) {
+                        else if (updatedRecognitions.size() >= 3) {
+                            telemetry.addData("More than three", "true");
+                            telemetry.update();
+                            updatedRecognitions = ElementParser.parseElements(updatedRecognitions);
                             int goldMineralX = -1;
                             int silverMineral1X = -1;
-                            int silverMineral2X = -1;
                             for (Recognition recognition : updatedRecognitions) {
                                 if (recognition.getLabel().equals(LABEL_GOLD_MINERAL)) {
                                     goldMineralX = (int) recognition.getLeft();
-                                } else if (silverMineral1X == -1) {
-                                    silverMineral1X = (int) recognition.getLeft();
                                 } else {
-                                    silverMineral2X = (int) recognition.getLeft();
+                                    silverMineral1X = (int) recognition.getLeft();
                                 }
                             }
-                            if (goldMineralX != -1 && silverMineral1X != -1 && silverMineral2X != -1) {
-                                if (goldMineralX < silverMineral1X && goldMineralX < silverMineral2X) {
-                                    telemetry.addData("Gold Mineral Position", "Left");
-                                    Log.i("[Pit]", "Left");
-                                    goldPosition = GoldPosition.LEFT;
-                                    step++;
-                                } else if (goldMineralX > silverMineral1X && goldMineralX > silverMineral2X) {
-                                    telemetry.addData("Gold Mineral Position", "Right");
-                                    Log.i("[Pit]", "Right");
-                                    goldPosition = GoldPosition.RIGHT;
+
+                            if (goldMineralX == -1) {
+                                telemetry.addData("Gold Mineral Position", "Left");
+                                goldPosition = GoldPosition.LEFT;
+                                step++;
+                            } else {
+                                if (goldMineralX < silverMineral1X) {
+                                    telemetry.addData("Gold Mineral Position", "Center");
+                                    goldPosition = GoldPosition.CENTER;
                                     step++;
                                 } else {
-                                    telemetry.addData("Gold Mineral Position", "Center");
-                                    Log.i("[Pit]", "Center");
-                                    goldPosition = GoldPosition.CENTER;
+                                    telemetry.addData("Gold Mineral Position", "Right");
+                                    goldPosition = GoldPosition.RIGHT;
                                     step++;
                                 }
                             }
@@ -231,69 +242,120 @@ public class Depot extends LinearOpMode {
 
                 // move towards the element
                 if (step == 3) {
-                    Lowering.raiseRobot(this, elevator);
                     this.mecanumDrive.stopMoving();
-                    this.mecanumDrive.complexDrive(MecanumDrive.Direction.LEFT.angle(), 1, 0);
-                    sleep(TimeOffsetVoltage.calculateDistance((hardwareMap.voltageSensor.get("Expansion Hub 10").getVoltage()), 65));
-                    this.mecanumDrive.stopMoving();
+
+                    switch (goldPosition) {
+                        case LEFT:
+                            this.mecanumDrive.complexDrive(MecanumDrive.Direction.LEFT.angle(), 1, 0);
+                            sleep(TimeOffsetVoltage.calculateDistance((hardwareMap.voltageSensor.get("Expansion Hub 10").getVoltage()), 58));
+                            this.mecanumDrive.stopMoving();
+                            break;
+                        case CENTER:
+                            this.mecanumDrive.complexDrive(MecanumDrive.Direction.LEFT.angle(), 1, 0);
+                            sleep(TimeOffsetVoltage.calculateDistance((hardwareMap.voltageSensor.get("Expansion Hub 10").getVoltage()), 49));
+                            this.mecanumDrive.stopMoving();
+                            break;
+                        case RIGHT:
+                            this.mecanumDrive.complexDrive(MecanumDrive.Direction.LEFT.angle(), 1, 0);
+                            sleep(TimeOffsetVoltage.calculateDistance((hardwareMap.voltageSensor.get("Expansion Hub 10").getVoltage()), 60));
+                            this.mecanumDrive.stopMoving();
+                            break;
+                    }
                     step++;
                 }
 
-                // rotate towards the rail
+                // move back to midway point between pit and landing site
                 if (step == 4) {
+                    this.mecanumDrive.autoMove(this, hardwareMap, this.mecanumDrive, MecanumDrive.Direction.RIGHT, 27); // 29
+                    step++;
+                }
+
+                // rotate left towards the other site
+                if (step == 5) {
                     switch (goldPosition) {
                         case LEFT:
                             this.mecanumDrive.complexDrive(0, 0, -0.3);
-                            sleep(TimeOffsetVoltage.calculateDistance((hardwareMap.voltageSensor.get("Expansion Hub 10").getVoltage()), 48));
+                            sleep(TimeOffsetVoltage.calculateDistance((hardwareMap.voltageSensor.get("Expansion Hub 10").getVoltage()), 40)); // this distance needs to adjusted
                             this.mecanumDrive.stopMoving();
                             step++;
                             break;
                         case CENTER:
-                            this.mecanumDrive.complexDrive(MecanumDrive.Direction.LEFT.angle(), 1, 0);
-                            sleep(TimeOffsetVoltage.calculateDistance((hardwareMap.voltageSensor.get("Expansion Hub 10").getVoltage()), 30));
-                            this.mecanumDrive.stopMoving();
+                            /*this.mecanumDrive.complexDrive(0, 0, 0.3);
+                            sleep(TimeOffsetVoltage.calculateDistance((hardwareMap.voltageSensor.get("Expansion Hub 10").getVoltage()), 31));
+                            this.mecanumDrive.stopMoving();*/
                             step++;
                             break;
                         case RIGHT:
                             this.mecanumDrive.complexDrive(0, 0, 0.3);
-                            sleep(TimeOffsetVoltage.calculateDistance((hardwareMap.voltageSensor.get("Expansion Hub 10").getVoltage()), 48));
+                            sleep(TimeOffsetVoltage.calculateDistance((hardwareMap.voltageSensor.get("Expansion Hub 10").getVoltage()), 31));
                             this.mecanumDrive.stopMoving();
                             step++;
                             break;
                     }
                 }
 
-                // drop the team marker into the pit
-                if (step == 5) {
-                    if (goldPosition.equals(GoldPosition.CENTER)) {
-                        this.mecanumDrive.complexDrive(MecanumDrive.Direction.LEFT.angle(), 1, 0);
-                        sleep(TimeOffsetVoltage.calculateDistance((hardwareMap.voltageSensor.get("Expansion Hub 10").getVoltage()), 35));
-                        this.mecanumDrive.stopMoving();
-                        dumper.setDirection(DcMotorSimple.Direction.REVERSE);
-                        dumper.setPower(1);
-                        this.sleep(1200);
-                        dumper.setPower(0);
-                        step++;
-                    }
-                    else {
-                        this.mecanumDrive.complexDrive(MecanumDrive.Direction.LEFT.angle(), 1, 0);
-                        sleep(TimeOffsetVoltage.calculateDistance((hardwareMap.voltageSensor.get("Expansion Hub 10").getVoltage()), 45));
-                        this.mecanumDrive.stopMoving();
-                        dumper.setDirection(DcMotorSimple.Direction.REVERSE);
-                        dumper.setPower(1);
-                        this.sleep(1200);
-                        dumper.setPower(0);
-                        step++;
-                    }
-                }
-
+                // make first leg of the trip to depot
                 if (step == 6) {
-                    this.mecanumDrive.complexDrive(0, 0, -0.3);
-                    sleep(TimeOffsetVoltage.calculateDistance((hardwareMap.voltageSensor.get("Expansion Hub 10").getVoltage()), 39));
+                    this.mecanumDrive.autoMove(this, hardwareMap, mecanumDrive, MecanumDrive.Direction.DOWN, 37);
+                    while (!limitswitch.getState()) {
+                        this.mecanumDrive.complexDrive(MecanumDrive.Direction.DOWN.angle(), 0.25, 0);
+                        sleep(1);
+                    }
+
+                    this.mecanumDrive.stopMoving();
+                    this.mecanumDrive.complexDrive(MecanumDrive.Direction.UP.angle(), 0.5, 0);
+                    sleep(300);
                     this.mecanumDrive.stopMoving();
                     step++;
                 }
 
+                // rotate front towards depot
+                if (step == 7) {
+                    this.mecanumDrive.complexDrive(0, 0, -0.3);
+                    sleep(TimeOffsetVoltage.calculateDistance((hardwareMap.voltageSensor.get("Expansion Hub 10").getVoltage()), 105)); // 100
+                    this.mecanumDrive.stopMoving();
+                    step++;
+                }
+
+                // move to depot
+                if (step == 8) {
+                    this.mecanumDrive.autoMove(this, hardwareMap, mecanumDrive, MecanumDrive.Direction.DOWN, 60);
+                    step++;
+                }
+
+                // drop game element
+                if (step == 9) {
+                    dumper.setDirection(DcMotorSimple.Direction.REVERSE);
+                    dumper.setPower(1);
+                    this.sleep(1200);
+                    dumper.setPower(0);
+                    step++;
+                }
+
+                // move towards pit for drop
+                if (step == 10) {
+                    this.mecanumDrive.autoMove(this, hardwareMap, mecanumDrive, MecanumDrive.Direction.UP, 56);
+                    step++;
+                }
+
+                // drop arm into the pit
+                if (step == 11) {
+                    this.grabber.setPower(1);
+                    sleep(2500);
+                    this.grabber.setPower(0);
+                    step++;
+                }
+
+                // start sampling just on the off-chance we can pull in silver or gold
+                if (step == 12) {
+                    this.sampler.setPower(1);
+                    extender.setPower(1);
+                    sleep(750);
+                    extender.setPower(0);
+                    step++;
+                }
+
+                telemetry.addData("Step", step);
                 telemetry.update();
             }
         }

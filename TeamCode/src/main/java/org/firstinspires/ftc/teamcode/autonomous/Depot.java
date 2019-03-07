@@ -307,7 +307,7 @@ public class Depot extends LinearOpMode {
                 // make first leg of the trip to depot
                 if (step == 6) {
                     this.mecanumDrive.autoMove(this, hardwareMap, mecanumDrive, MecanumDrive.Direction.DOWN, 37);
-                    while (!limitswitch.getState()) {
+                    while (!limitswitch.getState() && this.elapsedTime.time() <= 25) {
                         this.mecanumDrive.complexDrive(MecanumDrive.Direction.DOWN.angle(), 0.25, 0);
                         sleep(1);
                     }

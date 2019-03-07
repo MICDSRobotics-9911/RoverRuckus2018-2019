@@ -38,6 +38,7 @@ import com.qualcomm.robotcore.hardware.CRServo;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.DigitalChannel;
+import com.qualcomm.robotcore.util.ElapsedTime;
 
 import org.firstinspires.ftc.robotcore.external.ClassFactory;
 import org.firstinspires.ftc.robotcore.external.navigation.VuforiaLocalizer;
@@ -75,6 +76,7 @@ public class Pit extends LinearOpMode {
     private int step = 0;
 
     private MediaPlayer player;
+    private ElapsedTime elapsedTime;
 
     private static final String VUFORIA_KEY = "AZDepIf/////AAAAGfXxylZkt0YriAZz29imD+JnpWB4sxwIldmqfmE2S0NQ5QJ+R8FF9kqvBAeUoFLVcXawrLuNS1salfES/URf32WEkCus6PRLYzToyuvGnoBHtXJBW9nr94CSnAFvWjPrYVMEQhy7kZeuMEkhvUn8O/4DZ7f8vP1hPC7xKugpmGY0LTvxd/umhQxy9dl28mkUQWHcselYnHrOgrW4XvNq5exF67YoK3cQDjrodu02wmmFcoeHr78xyabZqOif8hk9Lk+F/idAMZcB1un86Goawbto6qTP7/SnXAbAedRrSKCGp/UuYa02c2Y5rteZMMtdSE7iL824A4kmwVZtg5biQy3jE0zAjsFQD7tztRiMGLxt";
 
@@ -121,8 +123,11 @@ public class Pit extends LinearOpMode {
         this.elevator.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         this.dumper.setDirection(DcMotorSimple.Direction.REVERSE);
         this.sampler.setDirection(DcMotorSimple.Direction.REVERSE);
+
+        this.elapsedTime = new ElapsedTime();
         // this.player.start();
         waitForStart();
+        this.elapsedTime.reset();
 
         if (opModeIsActive()) {
             if (step == 0) {
@@ -209,6 +214,10 @@ public class Pit extends LinearOpMode {
                                     step++;
                                 }
                             }
+                        }
+                        else if (updatedRecognitions.size() <= 1 && this.elapsedTime.time() > 15) {
+                            goldPosition = GoldPosition.CENTER;
+                            step++;
                         }
                         telemetry.update();
                     }

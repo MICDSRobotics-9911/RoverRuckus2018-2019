@@ -133,11 +133,11 @@ public class Knock extends LinearOpMode {
             if (step == 0) {
                 Lowering.lowerRobot(this, this.elevator);
                 this.mecanumDrive.complexDrive(MecanumDrive.Direction.UP.angle(), 0.5, 0);
-                sleep(TimeOffsetVoltage.calculateDistance((hardwareMap.voltageSensor.get("Expansion Hub 10").getVoltage()), 19));
+                sleep(TimeOffsetVoltage.calculateDistance((hardwareMap.voltageSensor.get("Expansion Hub 10").getVoltage()), 21));
                 this.mecanumDrive.stopMoving();
                 Lowering.partialRaise(this, elevator);
                 this.mecanumDrive.complexDrive(MecanumDrive.Direction.DOWN.angle(), 0.5, 0);
-                sleep(TimeOffsetVoltage.calculateDistance((hardwareMap.voltageSensor.get("Expansion Hub 10").getVoltage()), 19));
+                sleep(TimeOffsetVoltage.calculateDistance((hardwareMap.voltageSensor.get("Expansion Hub 10").getVoltage()), 21));
                 this.mecanumDrive.stopMoving();
                 this.mecanumDrive.complexDrive(MecanumDrive.Direction.LEFT.angle(), 0.5, 0);
                 sleep(TimeOffsetVoltage.calculateDistance((hardwareMap.voltageSensor.get("Expansion Hub 10").getVoltage()), 18)); // 12
